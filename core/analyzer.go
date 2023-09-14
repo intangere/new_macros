@@ -153,6 +153,10 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage) {
 
 	for idx, f := range pkg.Files {
 
+		if annos, ok := FileAnnotationMap[f]; !ok || len(annos) == 0 {
+			continue
+		}
+
 		fmt.Println("known imports", pkg.ImportMap[pkg.Files[idx]])
 		fmt.Println("known imports", invert_map(pkg.ImportMap[pkg.Files[idx]]))
 		for n, z := range pkg.ImportMap[pkg.Files[idx]] {
@@ -501,6 +505,12 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 						annos := extractAnnotations(n.Decorations().Start)
 						if len(annos) > 0 {
 							annotations[n] = annos
+
+							if entry, ok := FileAnnotationMap[f]; ok {
+								FileAnnotationMap[f] = append(entry, annos...)
+							} else {
+								FileAnnotationMap[f] = append([]Annotation{}, annos...)
+							}
 						}
 
 						function := n.(*dst.FuncDecl)
@@ -816,6 +826,8 @@ var Func_descriptors  = map[dst.Node]FuncDescriptor{}
 type Annotation struct {
         Params [][]string
 }
+
+var FileAnnotationMap map[*dst.File][]Annotation = map[*dst.File][]Annotation{}
 
 func extractAnnotationsOld(comments []string) []Annotation {
 	annotations := []Annotation{}
