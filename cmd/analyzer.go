@@ -65,6 +65,14 @@ func main() {
                     "github.com/dave/dst" : struct{}{},
 	}
 
+	imports_required := map[string]string{
+                    "github.com/intangere/new_macros/core" : "core",
+                    "github.com/intangere/new_macros/helpers"  : "helpers",
+                    "go/types"   : "types",
+                    "go/token" : "token",
+                    "github.com/dave/dst" : "dst",
+	}
+
 	tmpl_data := `package main
 
 		import(
@@ -187,7 +195,9 @@ func main() {
 	raw := b.Bytes()
 	extra_imports := ""
 
-	import_map := []map[string]string{}
+	import_map := []map[string]string{
+		imports_required,
+	}
 	nonce := 0
 
 	if len(Macro_descriptors) > 0 {
