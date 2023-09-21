@@ -102,10 +102,13 @@ func FindAssignmentIdentByType(f *dst.FuncDecl, pkg_name string, method_name str
 	panic("Could not find assigned node by type")
 }
 
-func GetOverlappedVariables(local_scope core.Scope, package_scope core.Scope, typed_params []core.Variable) []core.Variable {
+func GetOverlappedVariables(local_scope core.Scope, package_scope core.Scope, typed_params []core.Variable, ignore_indexes ...int) []core.Variable {
 	// variables is ordered to the function parameters
 	vars := []core.Variable{}
-	for _, param := range typed_params {
+	for idx, param := range typed_params {
+		if slices.Contains(ignore_indexes, idx) {
+			continue
+		}
 		found := false
 		for _, local_var := range local_scope.Variables {
 			if local_var.BasicType == param.BasicType {
