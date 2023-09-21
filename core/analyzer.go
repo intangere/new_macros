@@ -147,13 +147,22 @@ func invert_map(some_map map[string]ImportDescriptor) map[string]string {
 	return another_map
 }
 
-func Run(dec *decorator.Decorator, pkg AnnotatedPackage) {
+func Contains[T comparable](ts []T, n T) bool {
+	for _, t := range ts {
+		if t == n {
+			return true
+		}
+	}
+	return false
+}
+
+func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 //, pkg_path string, info *types.Info) {
 	main_file := ""
 
 	for idx, f := range pkg.Files {
 
-		if annos, ok := FileAnnotationMap[f]; !ok || len(annos) == 0 {
+		if annos, ok := FileAnnotationMap[f]; !ok || len(annos) == 0 || Contains(skip_paths, dec.Filenames[f]) {
 			continue
 		}
 
@@ -801,6 +810,7 @@ type Ctx struct {
 	Macros []MacroDescriptor
 	PkgName string
 	IgnoreFiles []string
+	SkipFiles []string
 }
 
 type MacroDescriptor struct {

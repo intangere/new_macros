@@ -43,13 +43,19 @@ func main() {
 
         pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be your")
 	maybe_ignore_files := flag.String("ignore", "", "Files to ignore from being parsed by go. Regex pattern matching support via r: prefix")
+	maybe_skip_files := flag.String("ignore_outputs", "", "Skip generating files that don't have their contents changed i.e macros that do not output code (this is a temporary fix). Regex pattern matching support via r: prefix")
         flag.Parse()
 
 	// ignore generate files and anything we generate!
 	ignore_files := []string{"r:(.*)_generated.go$", "macro_generator.go"}
+	skip_files := []string{}
 
 	if *maybe_ignore_files != "" {
 		ignore_files = append(ignore_files, strings.Split(*maybe_ignore_files, ",")...)
+	}
+
+	if *maybe_skip_files != "" {
+		skip_files = append(skip_files, strings.Split(*maybe_skip_files, ",")...)
 	}
 
 	//annotations, _, _, _, _ := Build(*pkg_name, ignore_files)
@@ -99,6 +105,7 @@ func main() {
 			core.Inject("{{.MacroName}}", {{.AnnotationsJson}}, {{.FuncName}})
 			{{- end}}
 			{{ $wrapped_ignores := AsStrings .IgnoreFiles }}
+			{{ $wrapped_skips := AsStrings .SkipFiles }}
 			annotated_packages := core.Build("{{.PkgName}}", []string{ {{ StringsJoin $wrapped_ignores "," }} })
                         for _, pkg := range annotated_packages {
 				core.BuildMacros(pkg.Funcs, pkg.Annotations, pkg.Info)
@@ -107,7 +114,7 @@ func main() {
 			//core.InjectBlocks(new_func_blocks)
 			for _, pkg := range annotated_packages {
 				if len(pkg.Annotations) > 0 {
-					core.Run(pkg.Dec, pkg)
+					core.Run(pkg.Dec, pkg, []string { {{ StringsJoin $skip_files, "," }} })
 				}
 			}
 		}
@@ -173,6 +180,7 @@ func main() {
 		Macros: Macro_descriptors,
 		PkgName: *pkg_name,
 		IgnoreFiles: ignore_files,
+		SkipFiles: skip_files,
 	})
 
         if err != nil {
