@@ -167,6 +167,10 @@ func GetOverlappedReturns(local_scope core.Scope, package_scope core.Scope, retu
 			}
 		}
 
+		if found {
+			continue
+		}
+
 		for _, local_var := range local_scope.Variables {
 			if local_var.BasicType == ret.BasicType {
 				if found {
