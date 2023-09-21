@@ -114,7 +114,7 @@ func main() {
 			//core.InjectBlocks(new_func_blocks)
 			for _, pkg := range annotated_packages {
 				if len(pkg.Annotations) > 0 {
-					core.Run(pkg.Dec, pkg, []string { {{ StringsJoin $skip_files, "," }} })
+					core.Run(pkg.Dec, pkg, []string { {{ StringsJoin $wrapped_skips, "," }} })
 				}
 			}
 		}
