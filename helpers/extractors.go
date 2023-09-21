@@ -102,11 +102,20 @@ func FindAssignmentIdentByType(f *dst.FuncDecl, pkg_name string, method_name str
 	panic("Could not find assigned node by type")
 }
 
+func contains[T comparable](s []T, n T) bool {
+	for _, v := range s {
+		if v == n {
+			return true
+		}
+	}
+	return false
+}
+
 func GetOverlappedVariables(local_scope core.Scope, package_scope core.Scope, typed_params []core.Variable, ignore_indexes ...int) []core.Variable {
 	// variables is ordered to the function parameters
 	vars := []core.Variable{}
 	for idx, param := range typed_params {
-		if slices.Contains(ignore_indexes, idx) {
+		if contains(ignore_indexes, idx) {
 			continue
 		}
 		found := false
