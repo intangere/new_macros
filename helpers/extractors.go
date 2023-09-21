@@ -200,6 +200,15 @@ func GetTypedParams(node dst.Node) []core.Variable {
         panic("TypedParams not found..?")
 }
 
+func GetTypedByName(params []core.Variable, name string) core.Variable {
+	for _, param := range params {
+		if param.Name == name {
+			return param
+		}
+	}
+        panic("TypedParam by name not found..?")
+}
+
 func GetReturns(node dst.Node) []core.Variable {
         if f, ok := core.Func_descriptors[node]; ok {
                 return f.Returns
