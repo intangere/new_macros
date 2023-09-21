@@ -629,6 +629,10 @@ func FindAnnotatedNode(annotation string) (dst.Node, bool) {
 func Compile(code string) (stmts []*dst.ExprStmt) {
 
 	code = "package main; func test() error { " + code + "}"
+
+	fmt.Println("Compiling...")
+	fmt.Println(code)
+
 	f, err := decorator.Parse(code)
 	if err != nil {
 		panic(err)
