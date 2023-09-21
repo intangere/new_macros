@@ -111,32 +111,27 @@ func contains[T comparable](s []T, n T) bool {
 	return false
 }
 
-func GetOverlappedVariables(local_scope core.Scope, package_scope core.Scope, typed_params []core.Variable, ignore_indexes ...int) []core.Variable {
+func GetOverlappedVariables(scopes []core.Scope, typed_params []core.Variable, ignore_indexes ...int) []core.Variable {
 	// variables is ordered to the function parameters
 	vars := []core.Variable{}
 	for idx, param := range typed_params {
 		if contains(ignore_indexes, idx) {
 			continue
 		}
+
 		found := false
-		for _, local_var := range local_scope.Variables {
-			if local_var.BasicType == param.BasicType {
-				if found {
-					panic("Ambiguous variable. One or more local variables with the same types found! " + local_var.BasicType)
+		for _, scope := range scopes {
+			for _, var_ := range scope.Variables {
+				if var_.BasicType == param.BasicType {
+					if found {
+						panic("Ambiguous variable. One or more local variables with the same types found! " + var_.BasicType)
+					}
+					vars = append(vars, var_)
+					found = true
+					break
 				}
-				vars = append(vars, local_var)
-				found = true
 			}
-		}
-
-		if found{
-			continue
-		}
-
-		for _, pkg_var := range package_scope.Variables {
-			if pkg_var.BasicType == param.BasicType {
-				vars = append(vars, pkg_var)
-				found = true
+			if found {
 				break
 			}
 		}
@@ -149,12 +144,14 @@ func GetOverlappedVariables(local_scope core.Scope, package_scope core.Scope, ty
 	return vars
 }
 
-func GetOverlappedReturns(local_scope core.Scope, package_scope core.Scope, return_types []core.Variable, typed_params []core.Variable) []core.Variable {
+// local scope should take precedence even in the case of ambigous variables!
+
+func GetOverlappedReturns(scopes []core.Scope, return_types []core.Variable, typed_params []core.Variable) []core.Variable {
 	// variables is ordered to the function parameters
 	vars := []core.Variable{}
 
 	fmt.Println("looking for", return_types)
-	fmt.Println("Using", local_scope, package_scope, typed_params)
+	fmt.Println("Using", scopes, typed_params)
 	for _, ret := range return_types {
 		found := false
 		for _, param := range typed_params {
@@ -171,24 +168,18 @@ func GetOverlappedReturns(local_scope core.Scope, package_scope core.Scope, retu
 			continue
 		}
 
-		for _, local_var := range local_scope.Variables {
-			if local_var.BasicType == ret.BasicType {
-				if found {
-					panic("Ambiguous variable. One or more local variables with the same types found! " + local_var.BasicType)
+		for _, scope := range scopes {
+			for _, var_ := range scope.Variables {
+				if var_.BasicType == ret.BasicType {
+					if found {
+						panic("Ambiguous variable. One or more local variables with the same types found! " + var_.BasicType)
+					}
+					vars = append(vars, var_)
+					found = true
+					break
 				}
-				vars = append(vars, local_var)
-				found = true
 			}
-		}
-
-		if found {
-			continue
-		}
-
-		for _, pkg_var := range package_scope.Variables {
-			if pkg_var.BasicType == ret.BasicType {
-				vars = append(vars, pkg_var)
-				found = true
+			if found {
 				break
 			}
 		}
