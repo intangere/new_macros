@@ -162,15 +162,18 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 
 	for idx, f := range pkg.Files {
 
+		fmt.Println("Skip paths", skip_paths)
+		fmt.Println("File", dec.Filenames[f])
+
 		if annos, ok := FileAnnotationMap[f]; !ok || len(annos) == 0 || Contains(skip_paths, dec.Filenames[f]) {
 			continue
 		}
 
-		fmt.Println("known imports", pkg.ImportMap[pkg.Files[idx]])
-		fmt.Println("known imports", invert_map(pkg.ImportMap[pkg.Files[idx]]))
-		for n, z := range pkg.ImportMap[pkg.Files[idx]] {
-			fmt.Println(n, z)
-		}
+		//fmt.Println("known imports", pkg.ImportMap[pkg.Files[idx]])
+		//fmt.Println("known imports", invert_map(pkg.ImportMap[pkg.Files[idx]]))
+		//for n, z := range pkg.ImportMap[pkg.Files[idx]] {
+		//	fmt.Println(n, z)
+		//}
 
 		r := decorator.NewRestorerWithImports(pkg.PkgPath, simple.New(invert_map(pkg.ImportMap[pkg.Files[idx]])))
 
