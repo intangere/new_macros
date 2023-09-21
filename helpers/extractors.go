@@ -122,7 +122,7 @@ func GetOverlappedVariables(local_scope core.Scope, package_scope core.Scope, ty
 		for _, local_var := range local_scope.Variables {
 			if local_var.BasicType == param.BasicType {
 				if found {
-					panic("Ambiguous variable. One or more local variables with the same types found!")
+					panic("Ambiguous variable. One or more local variables with the same types found! " + local_var)
 				}
 				vars = append(vars, local_var)
 				found = true
@@ -160,7 +160,7 @@ func GetOverlappedReturns(local_scope core.Scope, package_scope core.Scope, retu
 		for _, param := range typed_params {
 			if param.BasicType == ret.BasicType {
 				if found {
-					panic("Ambiguous variable. One or more local variables with the same types found!")
+					panic("Ambiguous variable. One or more local variables with the same types found!" + param)
 				}
 				vars = append(vars, param)
 				found = true
@@ -170,7 +170,7 @@ func GetOverlappedReturns(local_scope core.Scope, package_scope core.Scope, retu
 		for _, local_var := range local_scope.Variables {
 			if local_var.BasicType == ret.BasicType {
 				if found {
-					panic("Ambiguous variable. One or more local variables with the same types found!")
+					panic("Ambiguous variable. One or more local variables with the same types found! " + local_var)
 				}
 				vars = append(vars, local_var)
 				found = true
