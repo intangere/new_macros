@@ -38,10 +38,12 @@ func FindMethodCall(f *dst.FuncDecl, pkg_name string, method_name string) []dst.
 		if expr_stmt, ok := n.(*dst.ExprStmt); ok {
 			if call_stmt, ok := expr_stmt.X.(*dst.CallExpr); ok {
 				fmt.Println("Got call expr")
-				fmt.Println(call_stmt.Fun.(*dst.SelectorExpr).X.(*dst.Ident).Name, pkg_name)
-				fmt.Println(call_stmt.Fun.(*dst.SelectorExpr).Sel.Name, method_name)
-				if call_stmt.Fun.(*dst.SelectorExpr).X.(*dst.Ident).Name == pkg_name && call_stmt.Fun.(*dst.SelectorExpr).Sel.Name == method_name {
-					calls = append(calls, n)
+				if _, ok := call_stmt.Fun.(*dst.SelectorExpr); ok {
+					fmt.Println(call_stmt.Fun.(*dst.SelectorExpr).X.(*dst.Ident).Name, pkg_name)
+					fmt.Println(call_stmt.Fun.(*dst.SelectorExpr).Sel.Name, method_name)
+					if call_stmt.Fun.(*dst.SelectorExpr).X.(*dst.Ident).Name == pkg_name && call_stmt.Fun.(*dst.SelectorExpr).Sel.Name == method_name {
+						calls = append(calls, n)
+					}
 				}
 			}
 		} else if assign_stmt, ok := n.(*dst.AssignStmt); ok {
