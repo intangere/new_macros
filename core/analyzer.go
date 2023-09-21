@@ -165,7 +165,7 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 		fmt.Println("Skip paths", skip_paths)
 		fmt.Println("File", dec.Filenames[f])
 
-		if annos, ok := FileAnnotationMap[f]; !ok || len(annos) == 0 || Contains(skip_paths, dec.Filenames[f]) {
+		if annos, ok := FileAnnotationMap[f]; !ok || len(annos) == 0 || shouldSkipOutput(skip_paths, dec.Filenames[f]) {
 			continue
 		}
 
@@ -275,6 +275,26 @@ func ignoreFiles(ignore_files []string) []string {
         fmt.Println("Files to ignore", paths)
 
         return paths
+}
+
+func shouldSkipOutput(skip_patterns []string, file_path string) bool {
+        for _, pattern := range skip_patterns {
+                if strings.HasPrefix(pattern, "r:") {
+                        r, _ := regexp.Compile(pattern[2:])
+                        if r.MatchString(file_path) {
+				return true
+                        }
+                } else {
+			// ignore an exact file, i.e "test/test.go", "test.go"
+                        if pattern == file_path {
+				return true
+                        } else if strings.HasPrefix(file_path, pattern) && pattern[len(pattern)-1] == '/' {
+				fmt.Println("Skipping file output in ignored directory", file_path)
+				return true
+			}
+                }
+        }
+	return false
 }
 
 var imported_packages map[string]AnnotatedPackage = map[string]AnnotatedPackage{}
