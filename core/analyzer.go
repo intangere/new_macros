@@ -818,7 +818,7 @@ func WithNode(node_info []string) dst.Node {
 	panic("WithNode() could not find a suitable node!")
 }
 
-var IsLastMap map[string]dst.Node = map[string]dst.Node{}
+var IsLastMap map[string]int = map[string]int{}
 
 func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
 	fmt.Println("Building macros")
@@ -837,7 +837,7 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 				annotation_name := annotation[0]
 				fmt.Println("checking anno", annotation_name)
 				if IsMacro(annotation_name) {
-					IsLastMap[annotation_name] = all_types[idx] //start
+					IsLastMap[annotation_name] = IsLastMap[annotation_name] + 1
 				}
 			}
 		}
