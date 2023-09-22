@@ -817,8 +817,10 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 
 	ANNOTATIONS = annotations
 
-	for idx, _ := range append(append(funcs, consts...), structs...) {
-		start := funcs[idx]
+	all_types := append(append(funcs, consts...), structs...)
+
+	for idx, _ := range all_types {
+		start := all_types[idx]
 		for _, annotation_set := range annotations[start] {
 			for _, annotation := range annotation_set.Params {
 				annotation_name := annotation[0]
