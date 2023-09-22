@@ -837,7 +837,7 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 				annotation_name := annotation[0]
 				fmt.Println("checking anno", annotation_name)
 				if IsMacro(annotation_name) {
-					IsLastMap[annotation_name] = start
+					IsLastMap[annotation_name] = all_types[idx] //start
 				}
 			}
 		}
