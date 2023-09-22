@@ -9,8 +9,11 @@ func NewOrGetArray(name string) []any {
 		} else {
 			panic("Store key `"+name+"` is not an array!")
 		}
+	} else {
+		arr := []any{}
+		store[name] = arr
+		return arr
 	}
-	panic("Store key `"+name+"` not found!")
 }
 
 func UpdateArray(name string, array []any) {
