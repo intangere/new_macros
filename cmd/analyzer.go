@@ -140,7 +140,6 @@ func main() {
 				for _, annotation := range annotation_sub_set.Params {
 					if annotation[0] == ":macro" {
 						// save the last iterated node for a macro. we know this is the last occurance on the last loop
-						IsLastMap[annotation[1]] = start
 						// a little hacker man
 						anno_json, _ := json.Marshal(annotation_set)
 						anno_json, _ = json.Marshal(string(anno_json))
