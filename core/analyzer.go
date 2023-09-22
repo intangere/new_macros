@@ -587,6 +587,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 						node_to_files[n] = f
 						//}
 					case *dst.GenDecl:
+						fmt.Println("Found gen decl")
 						annos := extractAnnotations(n.Decorations().Start)
 						if len(annos) > 0 {
 							annotations[n] = annos
@@ -674,7 +675,9 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 	for _, pkg := range annotated_packages {
 		imported_packages[pkg.PkgName] = pkg
 		fmt.Println(pkg.PkgName, pkg.ImportMap)
+		fmt.Println("consts", pkg.Consts)
 	}
+
 
 	return annotated_packages
 }
@@ -814,7 +817,7 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 
 	ANNOTATIONS = annotations
 
-	for idx, _ := range funcs {
+	for idx, _ := range append(append(funcs, consts...), structs...) {
 		start := funcs[idx]
 		for _, annotation_set := range annotations[start] {
 			for _, annotation := range annotation_set.Params {
