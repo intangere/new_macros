@@ -5,7 +5,6 @@ const kek = "zoot"
 
 //[:zoot]
 type k struct {
-
 }
 
 //[:kek(:zoot,5)]

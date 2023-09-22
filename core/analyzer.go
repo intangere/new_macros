@@ -602,11 +602,19 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 						decl := n.(*dst.GenDecl)
 						_type := decl.Tok.String()
 
-						if _type == "struct" {
-							structs = append(structs, n)
-							Struct_descriptors[n] = StructDescriptor{
-								PkgName: pkg.Name,
-								PkgPath: pkg.PkgPath,
+						if _type == "type" {
+							// hacky way to determine struct
+							for _, spec := range decl.Specs {
+								if _, ok := spec.(*dst.TypeSpec); ok {
+									if _, ok := spec.(*dst.TypeSpec).Type.(*dst.StructType); ok {
+										structs = append(structs, n)
+										Struct_descriptors[n] = StructDescriptor{
+											PkgName: pkg.Name,
+											PkgPath: pkg.PkgPath,
+										}
+										break
+									}
+								}
 							}
 						} else if _type == "const" {
 							Const_descriptors[n] = ConstDescriptor{
