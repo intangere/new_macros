@@ -818,6 +818,8 @@ func WithNode(node_info []string) dst.Node {
 	panic("WithNode() could not find a suitable node!")
 }
 
+var IsLastMap map[string]dst.Node = map[string]dst.Node{}
+
 func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
 	fmt.Println("Building macros")
 	fmt.Println(funcs)
