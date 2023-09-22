@@ -41,7 +41,7 @@ func asStrings(strs []string) []string {
 
 func main() {
 
-        pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be your")
+        pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be parts of the module in the current directory i.e my_packge, my_package/something, or ./... to load all modules")
 	maybe_ignore_files := flag.String("ignore", "", "Files to ignore from being parsed by go. Regex pattern matching support via r: prefix")
 	maybe_skip_files := flag.String("ignore_outputs", "", "Skip generating files that don't have their contents changed i.e macros that do not output code (this is a temporary fix). Regex pattern matching support via r: prefix")
         flag.Parse()
@@ -108,7 +108,7 @@ func main() {
 			{{ $wrapped_skips := AsStrings .SkipFiles }}
 			annotated_packages := core.Build("{{.PkgName}}", []string{ {{ StringsJoin $wrapped_ignores "," }} })
                         for _, pkg := range annotated_packages {
-				core.BuildMacros(pkg.Funcs, pkg.Annotations, pkg.Info)
+				core.BuildMacros(pkg.Funcs, pkg.Consts, pkg.Structs, pkg.Annotations, pkg.Info)
 			}
 			// now we need to inject/overwite the generated nodes back into the ast
 			//core.InjectBlocks(new_func_blocks)
@@ -151,7 +151,6 @@ func main() {
 							Annotations: annotation_set,
 							AnnotationsJson: string(anno_json),
 						})
-						MACRO_SCOPES[annotation[1]] = Func_descriptors[start].Scope
 					}
 				}
 			}

@@ -230,6 +230,8 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 type AnnotatedPackage struct {
 	Annotations map[dst.Node][]Annotation
 	Funcs []dst.Node
+	Consts []dst.Node
+	Structs []dst.Node
 	Info *types.Info
 	Dec *decorator.Decorator
 	Files []*dst.File
@@ -459,6 +461,8 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 
 		annotations := make(map[dst.Node][]Annotation)
 		funcs := []dst.Node{}
+		consts := []dst.Node{}
+		structs := []dst.Node{}
 
 	        // this should always be length 1 since we load one package at a time.
 
@@ -582,6 +586,36 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 
 						node_to_files[n] = f
 						//}
+					case *dst.GenDecl:
+						annos := extractAnnotations(n.Decorations().Start)
+						if len(annos) > 0 {
+							annotations[n] = annos
+
+							if entry, ok := FileAnnotationMap[f]; ok {
+								FileAnnotationMap[f] = append(entry, annos...)
+							} else {
+								FileAnnotationMap[f] = append([]Annotation{}, annos...)
+							}
+						}
+
+						decl := n.(*dst.GenDecl)
+						_type := decl.Tok.String()
+
+						if _type == "struct" {
+							structs = append(structs, n)
+							Struct_descriptors[n] = StructDescriptor{
+								PkgName: pkg.Name,
+								PkgPath: pkg.PkgPath,
+							}
+						} else if _type == "const" {
+							Const_descriptors[n] = ConstDescriptor{
+								PkgName: pkg.Name,
+								PkgPath: pkg.PkgPath,
+							}
+							consts = append(consts, n)
+						}
+
+						node_to_files[n] = f
 				}
 
 				/*if current_func != nil {
@@ -611,6 +645,8 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 		annotated_packages = append(annotated_packages, AnnotatedPackage{
 			Annotations: annotations,
 			Funcs: funcs,
+			Consts: consts,
+			Structs: structs,
 			Info: info,
 			Dec: dec,
 			Files: files,
@@ -679,7 +715,6 @@ func Compile(code string) (stmts []*dst.ExprStmt) {
 
 var MACROS = map[string]func(dst.Node, *types.Info, ...any){}
 var MACRO_ANNOTATIONS = map[string][]Annotation{}
-var MACRO_SCOPES = map[string]Scope{}
 
 func Inject(macro_name string, annotations_json string, f func(dst.Node, *types.Info, ...any)) {
 	annos := []Annotation{}
@@ -772,7 +807,7 @@ func WithNode(node_info []string) dst.Node {
 	panic("WithNode() could not find a suitable node!")
 }
 
-func BuildMacros(funcs []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
+func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
 	fmt.Println("Building macros")
 	fmt.Println(funcs)
 	fmt.Println("annos", annotations)
@@ -857,8 +892,20 @@ type FuncDescriptor struct {
 	PkgPath string
 }
 
+type StructDescriptor struct {
+	PkgName string
+	PkgPath string
+}
+
+type ConstDescriptor struct {
+	PkgName string
+	PkgPath string
+}
+
 var Macro_descriptors []MacroDescriptor
 var Func_descriptors  = map[dst.Node]FuncDescriptor{}
+var Struct_descriptors  = map[dst.Node]StructDescriptor{}
+var Const_descriptors  = map[dst.Node]ConstDescriptor{}
 
 type Annotation struct {
         Params [][]string
