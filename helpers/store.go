@@ -12,3 +12,7 @@ func NewOrGetArray(name string) []any {
 	}
 	panic("Store key `"+name+"` not found!")
 }
+
+func UpdateArray(name string, array []any) {
+	store[name] = array
+}
