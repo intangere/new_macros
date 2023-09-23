@@ -108,7 +108,7 @@ func main() {
 			{{ $wrapped_skips := AsStrings .SkipFiles }}
 			annotated_packages := core.Build("{{.PkgName}}", []string{ {{ StringsJoin $wrapped_ignores "," }} })
                         for _, pkg := range annotated_packages {
-				core.BuildMacros(pkg.Funcs, pkg.Consts, pkg.Structs, pkg.Annotations, pkg.Info)
+				core.BuildMacros(pkg.Funcs, pkg.Consts, pkg.Structs, pkg.Vars, pkg.Annotations, pkg.Info)
 			}
 			// now we need to inject/overwite the generated nodes back into the ast
 			//core.InjectBlocks(new_func_blocks)

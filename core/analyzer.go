@@ -841,9 +841,9 @@ func WithNode(node_info []string) dst.Node {
 
 var IsLastMap map[string]int = map[string]int{}
 
-func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
+func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
 	fmt.Println("Building macros")
-	fmt.Println(funcs, consts, structs)
+	fmt.Println(funcs, consts, structs, vars)
 	fmt.Println("annos", annotations)
 
 	for k, v := range annotations {
@@ -852,7 +852,7 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 
 	//ANNOTATIONS = annotations
 
-	all_types := append(append(funcs, consts...), structs...)
+	all_types := append(append(append(funcs, consts...), structs...), vars...)
 
 	// map of which function macro occured last for each macro type so we can group macros
 	for idx, _ := range all_types {
