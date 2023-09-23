@@ -232,6 +232,7 @@ type AnnotatedPackage struct {
 	Funcs []dst.Node
 	Consts []dst.Node
 	Structs []dst.Node
+	Vars []dst.Node
 	Info *types.Info
 	Dec *decorator.Decorator
 	Files []*dst.File
@@ -462,6 +463,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 		funcs := []dst.Node{}
 		consts := []dst.Node{}
 		structs := []dst.Node{}
+		vars := []dst.Node{}
 
 	        // this should always be length 1 since we load one package at a time.
 
@@ -624,6 +626,24 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 						}
 
 						node_to_files[n] = f
+					case *dst.AssignStmt:
+						fmt.Println("Found var decl")
+						annos := extractAnnotations(n.Decorations().Start)
+						if len(annos) > 0 {
+							annotations[n] = annos
+
+							if entry, ok := FileAnnotationMap[f]; ok {
+								FileAnnotationMap[f] = append(entry, annos...)
+							} else {
+								FileAnnotationMap[f] = append([]Annotation{}, annos...)
+							}
+						}
+						Var_descriptors[n] = VarDescriptor{
+							PkgName: pkg.Name,
+							PkgPath: pkg.PkgPath,
+						}
+						vars = append(vars, n)
+
 				}
 
 				/*if current_func != nil {
@@ -655,6 +675,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 			Funcs: funcs,
 			Consts: consts,
 			Structs: structs,
+			Vars: vars,
 			Info: info,
 			Dec: dec,
 			Files: files,
@@ -942,10 +963,16 @@ type ConstDescriptor struct {
 	PkgPath string
 }
 
+type VarDescriptor struct {
+	PkgName string
+	PkgPath string
+}
+
 var Macro_descriptors []MacroDescriptor
 var Func_descriptors  = map[dst.Node]FuncDescriptor{}
 var Struct_descriptors  = map[dst.Node]StructDescriptor{}
 var Const_descriptors  = map[dst.Node]ConstDescriptor{}
+var Var_descriptors = map[dst.Node]VarDescriptor{}
 
 type Annotation struct {
         Params [][]string
