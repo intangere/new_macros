@@ -1,6 +1,6 @@
 - macros that do not generate in place shouldn't generate a file lol
 - neither should macros that only execute code
-- annotated consts
-- annotated structs
+- [done]: annotated consts
+- [done]: annotated structs
 - generate code into the package level
 - package scope
