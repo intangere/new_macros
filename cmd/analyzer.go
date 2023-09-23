@@ -328,7 +328,7 @@ func main() {
         }
 	defer os.Remove(file_name)
 
-        out, err := exec.Command("go", "run", "-race", file_name).CombinedOutput()
+        out, err := exec.Command("go", "run", file_name).CombinedOutput()
         if err != nil {
                 fmt.Println(err, string(out))
                 fmt.Println("Failed to execute executables")
