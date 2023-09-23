@@ -623,27 +623,15 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 								PkgPath: pkg.PkgPath,
 							}
 							consts = append(consts, n)
+						} else if _type == "var" {
+							Var_descriptors[n] = VarDescriptor{
+								PkgName: pkg.Name,
+								PkgPath: pkg.PkgPath,
+							}
+							consts = append(consts, n)
 						}
 
 						node_to_files[n] = f
-					case *dst.AssignStmt:
-						fmt.Println("Found var decl")
-						annos := extractAnnotations(n.Decorations().Start)
-						if len(annos) > 0 {
-							annotations[n] = annos
-
-							if entry, ok := FileAnnotationMap[f]; ok {
-								FileAnnotationMap[f] = append(entry, annos...)
-							} else {
-								FileAnnotationMap[f] = append([]Annotation{}, annos...)
-							}
-						}
-						Var_descriptors[n] = VarDescriptor{
-							PkgName: pkg.Name,
-							PkgPath: pkg.PkgPath,
-						}
-						vars = append(vars, n)
-
 				}
 
 				/*if current_func != nil {
@@ -972,7 +960,7 @@ var Macro_descriptors []MacroDescriptor
 var Func_descriptors  = map[dst.Node]FuncDescriptor{}
 var Struct_descriptors  = map[dst.Node]StructDescriptor{}
 var Const_descriptors  = map[dst.Node]ConstDescriptor{}
-var Var_descriptors = map[dst.Node]VarDescriptor{}
+var Var_descriptors  = map[dst.Node]VarDescriptor{}
 
 type Annotation struct {
         Params [][]string
