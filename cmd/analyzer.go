@@ -326,7 +326,7 @@ func main() {
         if err != nil {
                 panic(err)
         }
-	//defer os.Remove(file_name)
+	defer os.Remove(file_name)
 
         out, err := exec.Command("go", "run", file_name).CombinedOutput()
         if err != nil {
