@@ -749,7 +749,8 @@ func IsMacro(macro_name string) bool {
 	return false
 }
 
-var ANNOTATIONS map[dst.Node][]Annotation
+var ANNOTATIONS map[dst.Node][]Annotation = map[dst.Node][]Annotation{}
+
 func GetAnnotations(node dst.Node) []Annotation {
 	return ANNOTATIONS[node]
 }
@@ -825,7 +826,11 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 	fmt.Println(funcs, consts, structs)
 	fmt.Println("annos", annotations)
 
-	ANNOTATIONS = annotations
+	for k, v := range annotations {
+		ANNOTATIONS[k] = v
+	}
+
+	//ANNOTATIONS = annotations
 
 	all_types := append(append(funcs, consts...), structs...)
 
