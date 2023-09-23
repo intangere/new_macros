@@ -832,12 +832,15 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 	// map of which function macro occured last for each macro type so we can group macros
 	for idx, _ := range all_types {
 		start := all_types[idx]
+		called := map[string]bool{}
 		for _, annotation_set := range annotations[start] {
 			for _, annotation := range annotation_set.Params {
 				annotation_name := annotation[0]
 				fmt.Println("checking anno", annotation_name)
-				if IsMacro(annotation_name) {
+				if IsMacro(annotation_name) && !called[annotation_name] {
+					// need to skip duplicate calls to the same macro still [TODO]
 					IsLastMap[annotation_name] = IsLastMap[annotation_name] + 1
+					called[annotation_name] = true
 				}
 			}
 		}
