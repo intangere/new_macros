@@ -379,8 +379,7 @@ func buildTypedFuncReturns(f *dst.FuncDecl, dec *decorator.Decorator, info *type
 	return vars
 }
 
-var annotated_packages []AnnotatedPackage
-
+var Annotated_packages []AnnotatedPackage
 
 type ImportDescriptor struct {
 	Name string
@@ -651,7 +650,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 			}, nil)
 		}
 
-		annotated_packages = append(annotated_packages, AnnotatedPackage{
+		Annotated_packages = append(Annotated_packages, AnnotatedPackage{
 			Annotations: annotations,
 			Funcs: funcs,
 			Consts: consts,
@@ -680,19 +679,19 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 	// we used to return this directly for one package. how should we do it for multiple packages..?
 	//return annotations, funcs, info, dec, files
 
-	for _, pkg := range annotated_packages {
+	for _, pkg := range Annotated_packages {
 		imported_packages[pkg.PkgName] = pkg
 		fmt.Println(pkg.PkgName, pkg.ImportMap)
 		fmt.Println("consts", pkg.Consts)
 	}
 
 
-	return annotated_packages
+	return Annotated_packages
 }
 
 func FindAnnotatedNode(annotation string) (dst.Node, bool) {
-	for i := range annotated_packages {
-		for n, annos := range annotated_packages[i].Annotations {
+	for i := range Annotated_packages {
+		for n, annos := range Annotated_packages[i].Annotations {
 			for _, anno := range annos {
 				for _, tag := range anno.Params {
 					if tag[0] == annotation {

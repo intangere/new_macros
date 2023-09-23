@@ -2,10 +2,22 @@ package helpers
 
 import (
 	"github.com/dave/dst"
+	"github.com/dave/dst/decorator"
 	"fmt"
 	"github.com/intangere/new_macros/core"
 	"strings"
 )
+
+func GetDecorator(d dst.Node) *decorator.Decorator {
+	f := core.Func_descriptors[d]
+
+	for _, pkg := range core.Annotated_packages {
+		if pkg.PkgName == f.PkgName {
+			return pkg.Dec
+		}
+	}
+	panic("Decorator not found!")
+}
 
 func WithNode(extra []any) dst.Node {
 	// return the FIRST node found passed to our macro.
