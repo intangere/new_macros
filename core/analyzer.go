@@ -840,6 +840,7 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, annota
 				if IsMacro(annotation_name) {
 					if called[annotation_name] {
 						fmt.Println("Duplicate macro call found for", start)
+						panic("Duplicate macro call")
 					}
 					// need to skip duplicate calls to the same macro still [TODO]
 					IsLastMap[annotation_name] = IsLastMap[annotation_name] + 1
