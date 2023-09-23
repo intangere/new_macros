@@ -713,7 +713,7 @@ func FindAnnotatedNode(annotation string) (dst.Node, bool) {
 	return nil, false
 }
 
-func Compile(code string) (stmts []*dst.ExprStmt) {
+func Compile(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
 
 	code = "package main; func test() error { " + code + "}"
 
@@ -727,7 +727,7 @@ func Compile(code string) (stmts []*dst.ExprStmt) {
 	node := f.Decls[0].(*dst.FuncDecl)
 	for _, n := range node.Body.List {
 		new_node := dst.Clone(n)
-		stmts = append(stmts, new_node.(*dst.ExprStmt))
+		stmts = append(stmts, new_node.(dst.Stmt)) //.(*dst.ExprStmt))
 	}
 	return stmts
 }
