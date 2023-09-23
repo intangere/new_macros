@@ -145,7 +145,7 @@ func Ident(name string) *dst.Ident {
 	}
 }
 
-func InsertAfter(body []dst.Stmt, after_node dst.Stmt, to_insert ...*dst.ExprStmt) []dst.Stmt {
+func InsertAfter(body []dst.Stmt, after_node dst.Stmt, to_insert ...dst.Stmt) []dst.Stmt {
 	// this function is used to insert a node AFTER another node in a statement block
 	for i := range body {
 		if body[i] == after_node {
