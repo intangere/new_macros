@@ -12,9 +12,9 @@ func IsLast(node_count int, macro_name string) bool {
 	return false
 }
 
-func InterfaceExists(pkg_name string, interface_name string) bool {
+func InterfaceExists(pkg_path string, interface_name string) bool {
 	for _, pkg := range core.Annotated_packages {
-		if pkg.PkgName == pkg_name {
+		if pkg.PkgPath == pkg_path {
 			for _, intr := range pkg.Interfaces {
 				for _, spec := range intr.(*dst.GenDecl).Specs {
 					if spec.(*dst.ValueSpec).Names[0].String() == interface_name {
