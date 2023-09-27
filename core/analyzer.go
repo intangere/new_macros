@@ -742,7 +742,7 @@ func Compile(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
 	return stmts
 }
 
-func CompileAny(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
+func CompileFunctions(code string) (stmts []dst.Decl) { //*dst.ExprStmt) {
 
 	code = "package main;" + code
 
@@ -753,12 +753,7 @@ func CompileAny(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
 	if err != nil {
 		panic(err)
 	}
-	node := f.Decls[0].(*dst.FuncDecl)
-	for _, n := range node.Body.List {
-		new_node := dst.Clone(n)
-		stmts = append(stmts, new_node.(dst.Stmt)) //.(*dst.ExprStmt))
-	}
-	return stmts
+	return f.Decls
 }
 
 var MACROS = map[string]func(dst.Node, *types.Info, ...any){}
