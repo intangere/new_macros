@@ -17,7 +17,7 @@ func InterfaceExists(pkg_path string, interface_name string) bool {
 		if pkg.PkgPath == pkg_path {
 			for _, intr := range pkg.Interfaces {
 				for _, spec := range intr.(*dst.GenDecl).Specs {
-					if spec.(*dst.TypeSpec).Names[0].String() == interface_name {
+					if spec.(*dst.TypeSpec).Name.String() == interface_name {
 						return true
 					}
 				}
