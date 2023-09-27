@@ -245,3 +245,12 @@ func HasErrorVar(vars []core.Variable) bool {
 	}
 	return false
 }
+
+func GetMacroAnnotations(macro_name string) []core.Annotation {
+	for _, macro := range core.Macro_descriptors {
+		if macro.MacroName == macro_name {
+			return macro.Annotations
+		}
+	}
+	panic("Could not find macro to retrieve annotations")
+}
