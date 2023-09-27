@@ -742,6 +742,25 @@ func Compile(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
 	return stmts
 }
 
+func CompileAny(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
+
+	code = "package main;" + code
+
+	fmt.Println("Compiling...")
+	fmt.Println(code)
+
+	f, err := decorator.Parse(code)
+	if err != nil {
+		panic(err)
+	}
+	node := f.Decls[0].(*dst.FuncDecl)
+	for _, n := range node.Body.List {
+		new_node := dst.Clone(n)
+		stmts = append(stmts, new_node.(dst.Stmt)) //.(*dst.ExprStmt))
+	}
+	return stmts
+}
+
 var MACROS = map[string]func(dst.Node, *types.Info, ...any){}
 var MACRO_ANNOTATIONS = map[string][]Annotation{}
 
