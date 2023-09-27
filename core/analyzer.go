@@ -233,6 +233,7 @@ type AnnotatedPackage struct {
 	Consts []dst.Node
 	Structs []dst.Node
 	Vars []dst.Node
+	Interfaces []dst.Node
 	Info *types.Info
 	Dec *decorator.Decorator
 	Files []*dst.File
@@ -464,6 +465,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 		consts := []dst.Node{}
 		structs := []dst.Node{}
 		vars := []dst.Node{}
+		interfaces := []dst.Node{}
 
 	        // this should always be length 1 since we load one package at a time.
 
@@ -610,6 +612,13 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 									if _, ok := spec.(*dst.TypeSpec).Type.(*dst.StructType); ok {
 										structs = append(structs, n)
 										Struct_descriptors[n] = StructDescriptor{
+											PkgName: pkg.Name,
+											PkgPath: pkg.PkgPath,
+										}
+										break
+									} else if _, ok := spec.(*dst.TypeSpec).Type.(*dst.InterfaceType); ok {
+										interfaces = append(interfaces, n)
+										Interface_descriptors[n] = InterfaceDescriptor{
 											PkgName: pkg.Name,
 											PkgPath: pkg.PkgPath,
 										}
@@ -956,11 +965,17 @@ type VarDescriptor struct {
 	PkgPath string
 }
 
+type InterfaceDescriptor struct {
+	PkgName string
+	PkgPath string
+}
+
 var Macro_descriptors []MacroDescriptor
 var Func_descriptors  = map[dst.Node]FuncDescriptor{}
 var Struct_descriptors  = map[dst.Node]StructDescriptor{}
 var Const_descriptors  = map[dst.Node]ConstDescriptor{}
 var Var_descriptors  = map[dst.Node]VarDescriptor{}
+var Interface_descriptors = map[dst.Node]InterfaceDescriptor{}
 
 type Annotation struct {
         Params [][]string
