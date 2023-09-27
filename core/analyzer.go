@@ -673,6 +673,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 			Consts: consts,
 			Structs: structs,
 			Vars: vars,
+			Interfaces: interfaces,
 			Info: info,
 			Dec: dec,
 			Files: files,
