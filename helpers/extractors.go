@@ -247,7 +247,9 @@ func HasErrorVar(vars []core.Variable) bool {
 }
 
 func GetMacroAnnotations(macro_name string) []core.Annotation {
+	fmt.Println("Macros loaded")
 	for _, macro := range core.Macro_descriptors {
+		fmt.Println(macro.MacroName)
 		if macro.MacroName == macro_name {
 			return macro.Annotations
 		}
