@@ -111,6 +111,9 @@ func main() {
 		// inject macro definitions here
 		// and their imports
 		func main() {
+			{{ if not .KeepExpanded }}
+				defer core.Clean()
+			{{- end }}
 			{{- range $_, $macro := .Macros }}
 			core.Inject("{{.MacroName}}", {{.AnnotationsJson}}, {{.FuncName}})
 			{{- end}}

@@ -245,6 +245,14 @@ func runCommand(args []string) {
     cmd.Wait()
 }
 
+func Clean() {
+	fmt.Println("Cleaning up...")
+	for _, file := range generated_files {
+		fmt.Println("Removing generated file", file)
+		os.Remove(file)
+	}
+}
+
 func BuildOrRun(build bool, run bool) {
 	entry_name := ""
 	for _, pkg := range Annotated_packages {
