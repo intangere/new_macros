@@ -173,7 +173,8 @@ func InsertAfterNode(insert_after *dst.GenDecl, new_nodes []dst.Decl) {
 		for _, f := range pkg.Files {
 			for i := range f.Decls {
 				if f.Decls[i] == insert_after {
-					f.Decls = append(f.Decls[:i], append(new_nodes, f.Decls[i:]...)...)
+					j := i+1
+					f.Decls = append(f.Decls[:j], append(new_nodes, f.Decls[j:]...)...)
 					return
 				}
 			}
