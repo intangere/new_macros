@@ -263,6 +263,13 @@ func BuildOrRun(build bool, run bool) {
 	for _, file := range generated_files {
 		fmt.Println("Renaming file", strings.Split(file, "_generated.go")[0]+".go", "in order to build/run...")
 		os.Rename(strings.Split(file, "_generated.go")[0]+".go", strings.Split(file, "_generated.go")[0]+".renamed")
+
+
+		// check if entry file is also one that is generated so we use the proper one
+		if strings.Split(file, "_generated.go")[0]+".go" == entry_name {
+			fmt.Println("Executable build/run uses generated file. New entry point:", file)
+			entry_name = file
+		}
 	}
 
 	defer func() {
