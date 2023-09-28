@@ -257,6 +257,8 @@ func BuildOrRun(build bool, run bool) {
 		panic("Could not find an executable go file for package `main`")
 	}
 
+	fmt.Println("Executable build/run for", entry_name)
+
 	// have to rename the original versions of the files then revert them in order to be able to run/build standard go executables
 	for _, file := range generated_files {
 		fmt.Println("Renaming file", strings.Split(file, "_generated.go")[0]+".go", "in order to build/run...")
