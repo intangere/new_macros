@@ -26,3 +26,26 @@ func InterfaceExists(pkg_path string, interface_name string) bool {
 	}
 	return false
 }
+
+func IsMethodImplemented(pkg_path string, type_name string, method_name string) bool {
+	for _, pkg := range core.Annotated_packages {
+		if pkg.PkgPath == pkg_path {
+			for _, file := range pkg.Files {
+				for _, decl := range file.Decls {
+					if f, ok := decl.(*dst.FuncDecl); ok {
+						if f.Name.String() == method_name {
+							return true
+						}
+					}
+				}
+			}
+			return false
+		}
+	}
+	return false
+}
+
+/*func IsInterfaceImplemented(interface_definition *dst.GenDecl, our_node *dst.GenDecl) {
+	// we need to check function signatures
+
+}*/
