@@ -235,8 +235,15 @@ func runCommand(args []string) {
 
     cmd :=  exec.Command(args[0], args[1:]...)
     stdout, _ := cmd.StdoutPipe()
+    stderr, _ := cmd.StderrPipe()
     cmd.Start()
     scanner := bufio.NewScanner(stdout)
+    scanner.Split(bufio.ScanWords)
+    for scanner.Scan() {
+        m := scanner.Text()
+        fmt.Println(m)
+    }
+    scanner = bufio.NewScanner(stderr)
     scanner.Split(bufio.ScanWords)
     for scanner.Scan() {
         m := scanner.Text()
