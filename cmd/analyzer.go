@@ -67,6 +67,22 @@ func main() {
 		skip_files = append(skip_files, strings.Split(*maybe_skip_files, ",")...)
 	}
 
+	// ignore all files.
+	// this must take place here for several reasons
+	// if its in Build() or per package and you run other code that works on those packages
+	// the files won't be ignored anymore and it gets messy.
+        ignorables := IgnoreFiles(ignore_files)
+        for _, file := range ignorables {
+                os.Rename(file, file[:len(file)-3])
+        }
+
+        defer func() {   
+                for _, file := range ignorables {
+                        os.Rename(file[:len(file)-3], file)
+                }
+                fmt.Println("Restored ignored files")
+        }()
+
 	//annotations, _, _, _, _ := Build(*pkg_name, ignore_files)
 	annotated_packages := Build(*pkg_name, ignore_files)
 

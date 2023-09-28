@@ -218,7 +218,7 @@ type AnnotatedPackage struct {
 	NodeToFiles map[dst.Node]*dst.File
 }
 
-func ignoreFiles(ignore_files []string) []string {
+func IgnoreFiles(ignore_files []string) []string {
         paths := []string{}
         err := filepath.Walk(".",
                 func(path string, info os.FileInfo, err error) error {
@@ -370,7 +370,9 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
         loadConfig.Mode = loadMode
         loadConfig.Fset = token.NewFileSet()
 
-	ignorables := ignoreFiles(ignore_files)
+	// only ignore macro generator here as the ignores are otherwise handled in main
+	ignore_files = []string{"macro_generator.go"}
+	ignorables := IgnoreFiles(ignore_files)
 	for _, file := range ignorables {
 		os.Rename(file, file[:len(file)-3])
 	}
