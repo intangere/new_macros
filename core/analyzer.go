@@ -32,10 +32,6 @@ const loadMode = packages.NeedName |
     packages.NeedSyntax |
     packages.NeedTypesInfo
 
-func test() string {
-	return "kek"
-}
-
 type Scope struct {
         // contains all the defined variables for some block of code. could be a module as well
 	Variables map[string]Variable
@@ -50,95 +46,6 @@ type Variable struct {
 type PackageScope struct {
         Scope
 }
-
-func AppendStmt(node *dst.FuncDecl, stmt dst.Stmt) {
-	node.Body.List = append(node.Body.List, stmt)
-	// shift comments automatically
-	/*for _, comment := range node.Doc.List {
-		// gangy
-		fmt.Println("pos", pkg.Fset.Position(comment.Slash).Offset, pkg.Fset.Position(node.End()).Offset)
-		fmt.Println("ganaglang", comment.Text)
-		if pkg.Fset.Position(comment.Slash).Offset > pkg.Fset.Position(node.End()).Offset {
-			fmt.Println("Called")
-			comment.Slash++
-		}
-	}*/
-}
-
-/*func InjectBlocks(new_func_blocks map[dst.Node][]dst.Node) {
-	fmt.Println("Injecting expanded macros..")
-
-	dec := decorator.NewDecorator(pkg.Fset)
-
-	for _, f := range pkg.Syntax {
-		/*fmt.Println(f.Decls)
-		started := false
-		var start dst.Node
-		index := 0*/
-
-		// maybe this will fix comments
-		/*astutil.Apply(f, func(cr *astutil.Cursor) bool {
-			n := cr.Node()
-			if n == nil {
-				return true
-			}
-
-			expr := &dst.UnaryExpr{
-						Op: token.NOT,
-						X:  nil,
-					}
-
-
-			cr.InsertAfter(expr)
-			return true
-		}, nil)
-
-		/*
-			if _, ok := new_func_blocks[n]; ok {
-				// this is the start of a block that has to be overwritten
-				fmt.Println("Started expansion")
-				started = true
-				start = n
-				index = 0
-			}
-			fmt.Println(index)
-			if started {
-				fmt.Println("Checking node equality")
-				if n != new_func_blocks[start][index] {
-					fmt.Println("Inserted node")
-					//cr.InsertBefore(new_func_blocks[start][index])
-					cr.InsertBefore(new_func_blocks[start][index])
-				}
-
-				if index == len(new_func_blocks) {
-					fmt.Println("Expanded index", index, len(new_func_blocks))
-					started = false
-					index = 0
-					fmt.Println("Expansion ended")
-					fmt.Println(new_func_blocks)
-				} else {
-					index++
-				}
-			}
-
-			return true
-		}, nil)*/
-
-		// time to perform super hackerman to fix comments.
-		// the fact go fucked this ast parsing up so bad is disappointing af
-
-		// Decorate the *dst.File to give us a *dst.File
-/*		f, err := dec.DecorateFile(f)
-		if err != nil {
-			panic(err)
-		}
-
-		decorator.Print(f)
-		//printer.Fprint(os.Stdout, pkg.Fset, f)
-	}
-
-
-*/
 
 // r5edo this..
 func invert_map(some_map map[string]ImportDescriptor) map[string]string {
@@ -160,6 +67,7 @@ func Contains[T comparable](ts []T, n T) bool {
 
 var generated_files = []string{}
 
+// rename to something else cause this saves the expanded file
 func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 //, pkg_path string, info *types.Info) {
 	main_file := ""
@@ -211,24 +119,6 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 		fmt.Println("Running..")
 	}
 
-	/*for _, f := range pkg.Syntax {
-
-
-		file_src := pkg.Fset.File(f.Pos())
-		if strings.HasSuffix(file_src.Name(), "macro_generator.go") {
-			continue
-		}
-
-                new_file := file_src.Name()[:len(file_src.Name())-3] +"_generated.go"
-
-		var b bytes.Buffer
-		printer.Fprint(&b, pkg.Fset, f)
-
-		err := os.WriteFile(new_file, b.Bytes(), 0644)
-		if err != nil {
-			panic(err)
-		}
-	}*/
 }
 
 func runCommand(args []string) {
@@ -238,13 +128,11 @@ func runCommand(args []string) {
     stderr, _ := cmd.StderrPipe()
     cmd.Start()
     scanner := bufio.NewScanner(stdout)
-    scanner.Split(bufio.ScanWords)
     for scanner.Scan() {
         m := scanner.Text()
         fmt.Println(m)
     }
     scanner = bufio.NewScanner(stderr)
-    //scanner.Split(bufio.ScanWords)
     for scanner.Scan() {
         m := scanner.Text()
         fmt.Println(m)
@@ -424,7 +312,6 @@ func buildScope(f *dst.FuncDecl, dec *decorator.Decorator, info *types.Info) Sco
 			}
 		}
 	}
-	fmt.Println("s", scope)
 	return scope
 }
 
@@ -524,12 +411,6 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
         //        panic("Failed to load packages")
         }
 
-        for _, p := range pkgs {
-                fmt.Println("source file", p.Name) //, p.TypesInfo.Uses)
-                fmt.Println(p.GoFiles)
-                fmt.Println(p.PkgPath)
-        }
-
 	// we need to do like a map of everything being annotated by package i guess
 	// like type AnnotatedPackage struct {
 	//	Annotations:
@@ -600,12 +481,10 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 					if !ok {
 						panic("I did oopsie")
 					}
-					fmt.Println(imported.Name.String())
 					obj, ok := info.Implicits[mapped]
 					if !ok {
-
+						panic("bug")
 					}
-					fmt.Println("yeet")
 					name = obj.Name()
 				}
 				// this leaves \" in the strings. there is probably a good solution here [TODO]
@@ -627,17 +506,8 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 				// we need to build up function blocks
 
 				switch n.(type) {
-					//case *dst.CommentGroup:
-					//	comments := []string{}
-					//	for _, r_comment := range n.(*dst.CommentGroup).List {
-					//		comment := strings.TrimSpace(r_comment.Text)
-					//		comments = append(comments, comment)
-					//	}
-					//	fmt.Println("Found comments", comments)
-					//	unused_annotations = append(unused_annotations, extractAnnotations(comments)...)
 					case *dst.FuncDecl:
 
-						fmt.Println("Start", n.Decorations().Start)
 						annos := extractAnnotations(n.Decorations().Start)
 						if len(annos) > 0 {
 							annotations[n] = annos
@@ -650,19 +520,6 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 						}
 
 						function := n.(*dst.FuncDecl)
-						//if len(unused_annotations) > 0 {
-						//	// consume annotations
-						//	if current_func != nil {
-						//		annotations[current_func] = unused_annotations
-						//	} else {
-						//		annotations[n] = unused_annotations
-						//	}
-						//	unused_annotations = []Annotation{}
-						//}
-
-						//if current_func != nil {
-						//	fmt.Println("Block reset by func")
-						//}
 
 				                // extract the body
 						ast_function := dec.Map.Ast.Nodes[function]
@@ -679,15 +536,15 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 							PkgName: pkg.Name,
 							PkgPath: pkg.PkgPath,
 						}
-						fmt.Println("Found function. Block started..", Func_descriptors[n].FuncName)
-						fmt.Println("annos", annos)
-						//if len(annos) > 0 {
+
 						funcs = append(funcs, n)
 
+						if len(annos) > 0 {
+							fmt.Println("Annotated Function:", pkg.Name+"."+Func_descriptors[n].FuncName, len(annos), "annotations")
+						}
+
 						node_to_files[n] = f
-						//}
 					case *dst.GenDecl:
-						fmt.Println("Found gen decl")
 						annos := extractAnnotations(n.Decorations().Start)
 						if len(annos) > 0 {
 							annotations[n] = annos
@@ -737,6 +594,10 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 							consts = append(consts, n)
 						}
 
+
+						if len(annos) > 0 {
+							fmt.Println("Annotated Struct/Const/Var", len(annos), "annotations")
+						}
 						node_to_files[n] = f
 				}
 
@@ -797,8 +658,6 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 
 	for _, pkg := range Annotated_packages {
 		imported_packages[pkg.PkgName] = pkg
-		fmt.Println(pkg.PkgName, pkg.ImportMap)
-		fmt.Println("consts", pkg.Consts)
 	}
 
 
@@ -871,7 +730,6 @@ func GetMacro(macro_name string) func(dst.Node, *types.Info, ...any) {
 }
 
 func IsMacro(macro_name string) bool {
-	fmt.Println("Macro names", MACROS)
 	if _, ok := MACROS[macro_name]; ok {
 		return true
 	}
@@ -885,7 +743,6 @@ func GetAnnotations(node dst.Node) []Annotation {
 }
 
 func HasWithNode(annotations [][]string) ([]string, bool) {
-	fmt.Println("looking for with_node", annotations)
 	for _, anno := range annotations {
 		if anno[0] == ":with_node" {
 			return anno[1:], true
@@ -895,7 +752,6 @@ func HasWithNode(annotations [][]string) ([]string, bool) {
 }
 
 func HasWithPackageScope(annotations [][]string) bool {
-	fmt.Println("looking for with_package_scope", annotations)
 	for _, anno := range annotations {
 		if anno[0] == ":with_package_scope" {
 			return true
@@ -905,7 +761,6 @@ func HasWithPackageScope(annotations [][]string) bool {
 }
 
 func HasWithScope(annotations [][]string) bool {
-	fmt.Println("looking for with_scope", annotations)
 	for _, anno := range annotations {
 		if anno[0] == ":with_scope" {
 			return true
@@ -970,7 +825,6 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars [
 		for _, annotation_set := range annotations[start] {
 			for _, annotation := range annotation_set.Params {
 				annotation_name := annotation[0]
-				fmt.Println("checking anno", annotation_name)
 				if IsMacro(annotation_name) && !called[annotation_name] {
 					// need to skip duplicate calls to the same macro still [TODO]
 					IsLastMap[annotation_name] = IsLastMap[annotation_name] + 1
@@ -989,13 +843,10 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars [
 		for _, annotation_set := range annotations[start] {
 			for _, annotation := range annotation_set.Params {
 				annotation_name := annotation[0]
-				fmt.Println("checking anno", annotation_name)
 				if IsMacro(annotation_name) {
 					macro := GetMacro(annotation_name)
 
 					others := []any{}
-					fmt.Println("with", MACRO_ANNOTATIONS[annotation_name], annotation_name)
-					fmt.Println("ans", MACRO_ANNOTATIONS)
 					for _, anno := range MACRO_ANNOTATIONS[annotation_name] {
 						if node_info, ok := HasWithNode(anno.Params); ok {
 							node := WithNode(node_info)
@@ -1164,7 +1015,6 @@ func extractAnnotations(comments []string) []Annotation {
 		var annotation *Annotation
 
 		comment := strings.TrimSpace(r_comment)
-		fmt.Println("Comment->", comment)
 		comment = strings.Replace(comment, "// [", "//[", 1)
 
 		//end_offset := int(raw_comment.End())
@@ -1177,7 +1027,6 @@ func extractAnnotations(comments []string) []Annotation {
 
 			comment = comment[3:len(comment)-1]
 
-			fmt.Println("Handling", comment)
 			for idx < len(comment) {
 				if comment[idx] == ',' && !open_paren{
 					if strings.TrimSpace(string(section)) != "" {
@@ -1190,12 +1039,10 @@ func extractAnnotations(comments []string) []Annotation {
 				}
 
 				if comment[idx] == '(' {
-					fmt.Println("opened")
 					open_paren = true
 					sections = append(sections, strings.TrimSpace(string(section)))
 					section = []byte{}
 				} else if comment[idx] == ')' {
-					fmt.Println("closed")
 					open_paren = false
 					sections = append(sections, strings.TrimSpace(string(section)))
 					children = append(children, true)
@@ -1212,10 +1059,6 @@ func extractAnnotations(comments []string) []Annotation {
 			if len(sections) == 0 || string(section) != sections[len(sections)-1] {
 				sections = append(sections, string(section))
 				children = append(children, false)
-			}
-
-			for _, sec := range sections {
-				fmt.Println("Sec", sec)
 			}
 
 			if annotation == nil {

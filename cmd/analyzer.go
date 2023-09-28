@@ -302,12 +302,6 @@ func main() {
 
 	raws := strings.Replace(string(raw), "#INJECTPKGSHERE#", extra_imports, -1)
 
-	//fmt.Println(raws[0:1000])
-        //f, err := dec.Parse(raws)
-        //if err != nil {
-        //        panic(err)
-        //}
-
 	err = os.WriteFile(dir + "/main.go", []byte(raws), 0644)
         if err != nil {
                 panic(err)
@@ -322,11 +316,6 @@ func main() {
 
 	f := pkgs[0].Syntax[0]
 
-	fmt.Println("Import map", import_map)
-
-	for _, imp := range f.Imports{
-		fmt.Println(imp)
-	}
         r := decorator.NewRestorerWithImports("main", NewConflictResolver(import_map))
 
 	var b1 bytes.Buffer
