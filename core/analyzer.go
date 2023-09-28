@@ -242,7 +242,11 @@ func runCommand(args []string) {
         m := scanner.Text()
         fmt.Println(m)
     }
-    cmd.Wait()
+    err := cmd.Wait()
+    if err != nil {
+	fmt.Println("Failed to execute command", args)
+	panic(err)
+    }
 }
 
 func Clean() {
