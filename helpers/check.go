@@ -2,6 +2,7 @@ package helpers
 
 import "github.com/intangere/new_macros/core"
 import "github.com/dave/dst"
+import "fmt"
 
 func IsLast(node_count int, macro_name string) bool {
 	if macro_count, ok := core.IsLastMap[macro_name]; ok {
@@ -38,6 +39,7 @@ func IsMethodImplemented(pkg_path string, type_name string, method_name string) 
 						if f.Recv != nil {
 							if star, ok := f.Recv.List[0].Type.(*dst.StarExpr); ok {
 								method_type_name := star.X.(*dst.Ident).String()
+								fmt.Println(method_type_name, method_name)
 								if method_type_name == method_name {
 									return true
 								}
