@@ -244,7 +244,7 @@ func runCommand(args []string) {
         fmt.Println(m)
     }
     scanner = bufio.NewScanner(stderr)
-    scanner.Split(bufio.ScanWords)
+    //scanner.Split(bufio.ScanWords)
     for scanner.Scan() {
         m := scanner.Text()
         fmt.Println(m)
