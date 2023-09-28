@@ -34,9 +34,9 @@ func IsMethodImplemented(pkg_path string, type_name string, method_name string) 
 				for _, decl := range file.Decls {
 					if f, ok := decl.(*dst.FuncDecl); ok {
 						if f.Recv != nil {
-							method_type_name := f.Recv.List[0].Type.String()
+							method_type_name := f.Recv.List[0].Type.(*dst.Ident).String()
 							// remove pointer
-							if method_type_name[0] == "*" {
+							if method_type_name[0] == '*' {
 								method_type_name = method_type_name[1:]
 							}
 							if method_type_name == method_name {
