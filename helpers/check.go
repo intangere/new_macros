@@ -2,7 +2,6 @@ package helpers
 
 import "github.com/intangere/new_macros/core"
 import "github.com/dave/dst"
-import "fmt"
 
 func IsLast(node_count int, macro_name string) bool {
 	if macro_count, ok := core.IsLastMap[macro_name]; ok {
