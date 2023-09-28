@@ -510,8 +510,18 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
                 panic("bad pkg length")
         }*/
 
-        if packages.PrintErrors(pkgs) > 0 {
-                panic("Failed to load packages")
+	for _, pkg := range pkgs {
+        //if packages.PrintErrors(pkgs) > 0 {
+		// ignore type errors only since our macros may implement interfaces and generate whole types.
+		if len(pkg.Errors) > 0 {
+			for _, err := range pkg.Errors {
+				if err.Kind != packages.TypeError {
+					packages.PrintErrors(pkgs)
+					panic("Failed to load packages")
+				}
+			}
+		}
+        //        panic("Failed to load packages")
         }
 
         for _, p := range pkgs {
