@@ -27,6 +27,8 @@ func InterfaceExists(pkg_path string, interface_name string) bool {
 	return false
 }
 
+// need to define UnwrapStar() which will recuserively iterate to the base type
+
 func IsMethodImplemented(pkg_path string, type_name string, method_name string) bool {
 	for _, pkg := range core.Annotated_packages {
 		if pkg.PkgPath == pkg_path {
@@ -34,13 +36,16 @@ func IsMethodImplemented(pkg_path string, type_name string, method_name string) 
 				for _, decl := range file.Decls {
 					if f, ok := decl.(*dst.FuncDecl); ok {
 						if f.Recv != nil {
-							method_type_name := f.Recv.List[0].Type.(*dst.Ident).String()
-							// remove pointer
-							if method_type_name[0] == '*' {
-								method_type_name = method_type_name[1:]
-							}
-							if method_type_name == method_name {
-								return true
+							if star, ok := f.Recv.List[0].Type.(*dst.StarExpr); ok {
+								method_type_name := star.X.(*dst.Ident).String()
+								if method_type_name == method_name {
+									return true
+								}
+							} else {
+								method_type_name := f.Recv.List[0].Type.(*dst.Ident).String()
+								if method_type_name == method_name {
+									return true
+								}
 							}
 						}
 					}
