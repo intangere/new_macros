@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"github.com/dave/dst/decorator/resolver/gotypes"
 	"github.com/dave/dst/decorator/resolver/simple"
+	"os/exec"
+	"bufio"
 )
 
 const loadMode = packages.NeedName |
@@ -156,6 +158,8 @@ func Contains[T comparable](ts []T, n T) bool {
 	return false
 }
 
+var generated_files = []string{}
+
 func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 //, pkg_path string, info *types.Info) {
 	main_file := ""
@@ -197,6 +201,8 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 		if err != nil {
 			panic(err)
 		}
+
+		generated_files = append(generated_files, new_name)
 		//decorator.Fprint(file,f )
 		// need to find the main file in order to execute it
 	}
@@ -223,6 +229,59 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 			panic(err)
 		}
 	}*/
+}
+
+func runCommand(args []string) {
+
+    cmd :=  exec.Command(args[0], args[1:]...)
+    stdout, _ := cmd.StdoutPipe()
+    cmd.Start()
+    scanner := bufio.NewScanner(stdout)
+    scanner.Split(bufio.ScanWords)
+    for scanner.Scan() {
+        m := scanner.Text()
+        fmt.Println(m)
+    }
+    cmd.Wait()
+}
+
+func BuildOrRun(build bool, run bool) {
+	entry_name := ""
+	for _, pkg := range Annotated_packages {
+		if pkg.PkgName == "main" {
+			entry_name = pkg.Dec.Filenames[pkg.Files[0]]
+		}
+	}
+
+	if entry_name == "" {
+		panic("Could not find an executable go file for package `main`")
+	}
+
+	// have to rename the original versions of the files then revert them in order to be able to run/build standard go executables
+	for _, file := range generated_files {
+		fmt.Println("Renaming file", strings.Split(file, "_generated.go")[0]+".go", "in order to build/run...")
+		os.Rename(strings.Split(file, "_generated.go")[0]+".go", strings.Split(file, "_generated.go")[0]+".renamed")
+	}
+
+	defer func() {
+		for _, file := range generated_files {
+			fmt.Println("Reverted file", strings.Split(file, "_generated.go")[0]+".go")
+			os.Rename(strings.Split(file, "_generated.go")[0]+".renamed", strings.Split(file, "_generated.go")[0]+".go")
+		}
+	}()
+
+	if build {
+		runCommand([]string{"go", "build", entry_name})
+	}
+
+	if run {
+		if build {
+			fmt.Println("Running built executable:" + strings.Split(entry_name,".")[0])
+			runCommand([]string{strings.Split(entry_name,".")[0]})
+		} else {
+			runCommand([]string{"go", "run", entry_name})
+		}
+	}
 }
 
 //var pkg *packages.Package
@@ -942,6 +1001,9 @@ type Ctx struct {
 	PkgName string
 	IgnoreFiles []string
 	SkipFiles []string
+	KeepExpanded bool
+	Build bool
+	Run bool
 }
 
 type MacroDescriptor struct {

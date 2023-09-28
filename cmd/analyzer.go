@@ -41,10 +41,20 @@ func asStrings(strs []string) []string {
 
 func main() {
 
-        pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be parts of the module in the current directory i.e my_packge, my_package/something, or ./... to load all modules")
+        pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be parts of the module in the current directory i.e my_packge, my_package/something, or ./... to load all local packagesw")
 	maybe_ignore_files := flag.String("ignore", "", "Files to ignore from being parsed by go. Regex pattern matching support via r: prefix")
 	maybe_skip_files := flag.String("ignore_outputs", "", "Skip generating files that don't have their contents changed i.e macros that do not output code (this is a temporary fix). Regex pattern matching support via r: prefix")
+	should_build := flag.Bool("build", false, "Build go executable after expanding macros")
+	should_run := flag.Bool("run", false, "Run go program after expanding macros")
+	keep_expanded := flag.Bool("keep_generated", false, "Keep the generated files")
+	clean := flag.Bool("clean", false, "Remove all generated files. This removes every file matching *_generated.go recursively")
+
         flag.Parse()
+
+	if *clean {
+		fmt.Println("Cleaning generated files")
+		return
+	}
 
 	// ignore generate files and anything we generate!
 	ignore_files := []string{"r:(.*)_generated.go$", "macro_generator.go"}
@@ -117,6 +127,9 @@ func main() {
 					core.Run(pkg.Dec, pkg, []string { {{ StringsJoin $wrapped_skips "," }} })
 				}
 			}
+			{{ if or .Build .Run }}
+				core.BuildOrRun({{.Build}}, {{.Run}})
+			{{- end }}
 		}
 	`
 
@@ -181,6 +194,9 @@ func main() {
 		PkgName: *pkg_name,
 		IgnoreFiles: ignore_files,
 		SkipFiles: skip_files,
+		KeepExpanded: *keep_expanded,
+		Run: *should_run,
+		Build: *should_build,
 	})
 
         if err != nil {
