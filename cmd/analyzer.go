@@ -8,7 +8,6 @@ import (
 	"text/template"
 	"bytes"	
 	"os"
-	"os/exec"
 	. "github.com/intangere/new_macros/core"
 	"strings"
 	"encoding/json"
@@ -336,10 +335,5 @@ func main() {
         }
 	defer os.Remove(file_name)
 
-        out, err := exec.Command("go", "run", file_name).CombinedOutput()
-        if err != nil {
-                fmt.Println(err, string(out))
-                fmt.Println("Failed to execute executables")
-        }
-	fmt.Println("Output", string(out))
+	RunCommand([]string{"go", "run", file_name})
 }

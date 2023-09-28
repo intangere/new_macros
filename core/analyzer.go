@@ -121,7 +121,7 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 
 }
 
-func runCommand(args []string) {
+func RunCommand(args []string) {
 
     cmd :=  exec.Command(args[0], args[1:]...)
     stdout, _ := cmd.StdoutPipe()
@@ -187,15 +187,15 @@ func BuildOrRun(build bool, run bool) {
 	}()
 
 	if build {
-		runCommand([]string{"go", "build", entry_name})
+		RunCommand([]string{"go", "build", entry_name})
 	}
 
 	if run {
 		if build {
 			fmt.Println("Running built executable:" + strings.Split(entry_name,".")[0])
-			runCommand([]string{strings.Split(entry_name,".")[0]})
+			RunCommand([]string{strings.Split(entry_name,".")[0]})
 		} else {
-			runCommand([]string{"go", "run", entry_name})
+			RunCommand([]string{"go", "run", entry_name})
 		}
 	}
 }

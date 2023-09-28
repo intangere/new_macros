@@ -2,5 +2,5 @@
 - neither should macros that only execute code
 - [done]: annotated consts
 - [done]: annotated structs
-- generate code into the package level
+- [done]: generate code into the package level. you can inject into f.Decls
 - package scope
