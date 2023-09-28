@@ -39,13 +39,12 @@ func IsMethodImplemented(pkg_path string, type_name string, method_name string) 
 						if f.Recv != nil {
 							if star, ok := f.Recv.List[0].Type.(*dst.StarExpr); ok {
 								method_type_name := star.X.(*dst.Ident).String()
-								fmt.Println(method_type_name, method_name)
-								if method_type_name == method_name {
+								if method_type_name == type_name {
 									return true
 								}
 							} else {
 								method_type_name := f.Recv.List[0].Type.(*dst.Ident).String()
-								if method_type_name == method_name {
+								if method_type_name == type_name {
 									return true
 								}
 							}
