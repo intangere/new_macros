@@ -2,6 +2,7 @@ package helpers
 
 import "github.com/dave/dst"
 import "go/token"
+import "github.com/intangere/new_macros/core"
 
 func MethodCall(pkg_name string, method string, args ...dst.Expr) *dst.ExprStmt {
   return &dst.ExprStmt{
@@ -166,3 +167,18 @@ func CallExprAsExprStmt(stmt *dst.CallExpr) *dst.ExprStmt {
 	}
 }
 
+func InsertAfterNode(insert_after *dst.GenDecl, new_nodes []dst.Decl) {
+
+	for _, pkg := range core.Annotated_packages {
+		for _, f := range pkg.Files {
+			for i := range f.Decls {
+				if f.Decls[i] == insert_after {
+					f.Decls = append(f.Decls[:i], append(new_nodes, f.Decls[i:]...)...)
+					return
+				}
+			}
+		}
+	}
+
+	panic("Insert after failed miserably. This is either a case of misuse or an internal bug.")
+}
