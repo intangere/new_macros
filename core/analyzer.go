@@ -67,6 +67,35 @@ func Contains[T comparable](ts []T, n T) bool {
 
 var generated_files = []string{}
 
+func IgnoreUnexpandedPaths() []string {
+        paths := []string{}
+        err := filepath.Walk(".",
+                func(path string, info os.FileInfo, err error) error {
+		if strings.HasSuffix(path, "_generated.go") {
+			maybe_original_file := path[:len(path)-len("_generated.go")] + ".go"
+			if _, err := os.Stat(path); err == nil {
+				os.Rename(maybe_original_file, maybe_original_file+".buildignore")
+				paths = append(paths, maybe_original_file)
+			}
+		}
+                //fmt.Println(path, info.Size())
+                return nil
+        })
+
+        if err != nil {
+                panic(err)
+        }
+
+
+        fmt.Println("Files to ignore during build", paths)
+
+        return paths
+}
+
+func BuildOnly() {
+	RunCommand([]string{"go", "build"})
+}
+
 // rename to something else cause this saves the expanded file
 func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 //, pkg_path string, info *types.Info) {

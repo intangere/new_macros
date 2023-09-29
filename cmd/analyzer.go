@@ -43,11 +43,11 @@ func main() {
         pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be parts of the module in the current directory i.e my_packge, my_package/something, or ./... to load all local packagesw")
 	maybe_ignore_files := flag.String("ignore", "", "Files to ignore from being parsed by go. Regex pattern matching support via r: prefix")
 	maybe_skip_files := flag.String("ignore_outputs", "", "Skip generating files that don't have their contents changed i.e macros that do not output code (this is a temporary fix). Regex pattern matching support via r: prefix")
-	should_build := flag.Bool("build", false, "Build go executable after expanding macros")
-	should_run := flag.Bool("run", false, "Run go program after expanding macros")
+	should_build := flag.Bool("build", true, "Build go executable after expanding macros")
+	should_run := flag.Bool("run", false, "Run go program after expanding macros. do not use this. exitting from the running program will not call the required defers and will have to manually fix your source")
 	keep_expanded := flag.Bool("keep_generated", false, "Keep the generated files")
 	clean := flag.Bool("clean", false, "Remove all generated files. This removes every file matching *_generated.go recursively")
-
+	build_only := flag.Bool("build_only", false, "Build the current source code using the original source code or with the already expanded macros from -keep_expanded")
         flag.Parse()
 
 	if *clean {
@@ -56,7 +56,12 @@ func main() {
 	}
 
 	// ignore generate files and anything we generate!
-	ignore_files := []string{"r:(.*)_generated.go$", "macro_generator.go"}
+	ignore_files := []string{}
+
+	if !*build_only{
+		ignore_files = append(ignore_files, []string{"r:(.*)_generated.go$", "macro_generator.go"}...)
+	}
+
 	skip_files := []string{}
 
 	if *maybe_ignore_files != "" {
@@ -73,15 +78,27 @@ func main() {
 	// the files won't be ignored anymore and it gets messy.
         ignorables := IgnoreFiles(ignore_files)
         for _, file := range ignorables {
-                os.Rename(file, file[:len(file)-3])
+                os.Rename(file, file[:len(file)-3]+".original")
         }
 
         defer func() {   
                 for _, file := range ignorables {
-                        os.Rename(file[:len(file)-3], file)
+                        os.Rename(file[:len(file)-3]+".original", file)
                 }
                 fmt.Println("Restored ignored files")
         }()
+
+	if *build_only {
+		paths := IgnoreUnexpandedPaths()
+		defer func() {
+			for _, file := range paths {
+				os.Rename(file+".buildignore", file)
+				fmt.Println("Restored ignore build file", file)
+			}
+		}()
+		BuildOnly()
+		return
+	}
 
 	//annotations, _, _, _, _ := Build(*pkg_name, ignore_files)
 	annotated_packages := Build(*pkg_name, ignore_files)
