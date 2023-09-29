@@ -52,6 +52,7 @@ func main() {
 
 	if *clean {
 		fmt.Println("Cleaning generated files")
+		os.RemoveAll(".generated/")
 		return
 	}
 

@@ -4,3 +4,4 @@
 - [done]: annotated structs
 - [done]: generate code into the package level. you can inject into f.Decls
 - package scope
+- ignore actually restores generated files ontop of the newly generated ones. this is a bit of a problem

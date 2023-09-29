@@ -21,6 +21,8 @@ import (
 	"github.com/dave/dst/decorator/resolver/simple"
 	"os/exec"
 	"bufio"
+	"errors"
+	"strconv"
 )
 
 const loadMode = packages.NeedName |
@@ -96,10 +98,34 @@ func BuildOnly() {
 	RunCommand([]string{"go", "build"})
 }
 
+const macro_dir = ".generated/"
+
+func createMacroDir() {
+	path := macro_dir
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir(path, os.ModePerm)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
+func getFreeFileName(used_names []string, name string, nonce int) string {
+	for Contains(used_names, name + strconv.Itoa(nonce)) {
+		nonce += 1
+	}
+	return name + strconv.Itoa(nonce)
+}
+
 // rename to something else cause this saves the expanded file
 func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 //, pkg_path string, info *types.Info) {
 	main_file := ""
+
+	createMacroDir()
+
+	file_map := map[string]string{}
+	used_names := []string{}
 
 	for idx, f := range pkg.Files {
 
@@ -125,7 +151,23 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 		}
 
 		new_name := strings.Split(og_name, ".go")[0]
-		new_name = new_name + "_generated.go"
+
+		if strings.Contains(new_name, "/") {
+			parts := strings.Split(new_name, "/")
+			new_name = parts[len(parts)-1]
+		}
+
+		new_name = macro_dir + new_name //+ "_generated.go"
+
+		if Contains(used_names, new_name) {
+			new_name = getFreeFileName(used_names, new_name, 0)
+		}
+
+		new_name += "_generated.go"
+
+		// old method
+		//new_name := strings.Split(og_name, ".go")[0]
+		//new_name = new_name + "_generated.go"
 
 		//defer os.Remove(new_name)
 
@@ -134,10 +176,14 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 			panic(err)
 		}
 
+		defer file.Close()
+
 		err = r.Fprint(file,f )
 		if err != nil {
 			panic(err)
 		}
+
+		file_map[og_name] = new_name
 
 		generated_files = append(generated_files, new_name)
 		//decorator.Fprint(file,f )
@@ -147,6 +193,18 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 	if main_file != "" {
 		fmt.Println("Running..")
 	}
+
+
+	file, err := os.Create(macro_dir + "map")
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	m, _ := json.Marshal(file_map)
+
+	file.Write(m)
 
 }
 
@@ -175,10 +233,23 @@ func RunCommand(args []string) {
 
 func Clean() {
 	fmt.Println("Cleaning up...")
-	for _, file := range generated_files {
-		fmt.Println("Removing generated file", file)
-		os.Remove(file)
-	}
+	os.RemoveAll(macro_dir)
+	//for _, file := range generated_files {
+	//	fmt.Println("Removing generated file", file)
+	//	os.Remove(file)
+	//}
+}
+
+func getFileMap() map[string]string {
+    file_map := map[string]string{}
+    data, err := os.ReadFile(macro_dir+"map")
+    if err != nil {
+       fmt.Println("No generated macro files found.")
+       return file_map
+    }
+    //ptr may not be needed
+    _ = json.Unmarshal(data, &file_map)
+    return file_map
 }
 
 func BuildOrRun(build bool, run bool) {
@@ -195,23 +266,34 @@ func BuildOrRun(build bool, run bool) {
 
 	fmt.Println("Executable build/run for", entry_name)
 
-	// have to rename the original versions of the files then revert them in order to be able to run/build standard go executables
-	for _, file := range generated_files {
-		fmt.Println("Renaming file", strings.Split(file, "_generated.go")[0]+".go", "in order to build/run...")
-		os.Rename(strings.Split(file, "_generated.go")[0]+".go", strings.Split(file, "_generated.go")[0]+".renamed")
+	for og_path, generated_path := range getFileMap() {
+		fmt.Println("Swapping", og_path, "with generated macro file", generated_path)
+		os.Rename(og_path, strings.Split(og_path, ".go")[0]+".original")
+		fmt.Println(og_path,"->",strings.Split(og_path, ".go")[0]+".original")
+		raw_path := og_path[:strings.LastIndex(og_path, "/")+1]
+		generated_name := strings.Split(generated_path, macro_dir)[1]
+		fmt.Println(generated_path,"->",raw_path+generated_name)
+		os.Rename(generated_path, raw_path + generated_name)
 
-
-		// check if entry file is also one that is generated so we use the proper one
-		if strings.Split(file, "_generated.go")[0]+".go" == entry_name {
-			fmt.Println("Executable build/run uses generated file. New entry point:", file)
-			entry_name = file
+		if og_path == entry_name {
+			entry_name = raw_path + generated_name
+			fmt.Println("Executable build/run uses generated file. New entry point:", entry_name)
 		}
 	}
 
 	defer func() {
-		for _, file := range generated_files {
-			fmt.Println("Reverted file", strings.Split(file, "_generated.go")[0]+".go")
-			os.Rename(strings.Split(file, "_generated.go")[0]+".renamed", strings.Split(file, "_generated.go")[0]+".go")
+		for og_path, generated_path := range getFileMap() {
+			fmt.Println("Restoring original file", og_path)
+			// swap generated back first
+			raw_path := og_path[:strings.LastIndex(og_path, "/")+1]
+			generated_name := strings.Split(generated_path, macro_dir)[1]
+			err := os.Rename(raw_path + generated_name, generated_path)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(raw_path+generated_name,"->",generated_path)
+			os.Rename(strings.Split(og_path, ".go")[0]+".original", og_path)
+			fmt.Println(strings.Split(og_path, ".go")[0]+".original","->",og_path)
 		}
 	}()
 
