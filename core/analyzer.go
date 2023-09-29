@@ -254,7 +254,7 @@ func getFileMap() map[string]string {
 }
 
 func BuildOrRun(build bool, run bool) {
-	entry_name := ""
+	entry_name := "."
 	for _, pkg := range Annotated_packages {
 		if pkg.PkgName == "main" {
 			entry_name = pkg.Dec.Filenames[pkg.Files[0]]

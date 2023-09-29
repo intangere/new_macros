@@ -90,14 +90,15 @@ func main() {
         }()
 
 	if *build_only {
-		paths := IgnoreUnexpandedPaths()
+		/*paths := IgnoreUnexpandedPaths()
 		defer func() {
 			for _, file := range paths {
 				os.Rename(file+".buildignore", file)
 				fmt.Println("Restored ignore build file", file)
 			}
 		}()
-		BuildOnly()
+		BuildOnly()*/
+		BuildOrRun(true, false)
 		return
 	}
 
