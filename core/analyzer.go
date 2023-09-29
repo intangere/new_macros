@@ -128,6 +128,11 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 	file_map := getFileMap()
 	used_names := []string{}
 
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
 	for idx, f := range pkg.Files {
 
 		fmt.Println("Skip paths", skip_paths)
@@ -184,6 +189,7 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 			panic(err)
 		}
 
+		og_name = strings.Split(og_name, cwd+"/")[1]
 		file_map[og_name] = new_name
 
 		generated_files = append(generated_files, new_name)
@@ -254,10 +260,17 @@ func getFileMap() map[string]string {
 }
 
 func BuildOrRun(build bool, run bool) {
+	// this needs to be severely refactored
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
 	entry_name := "."
 	for _, pkg := range Annotated_packages {
 		if pkg.PkgName == "main" {
 			entry_name = pkg.Dec.Filenames[pkg.Files[0]]
+			entry_name = strings.Split(entry_name, cwd+"/")[1]
 		}
 	}
 
