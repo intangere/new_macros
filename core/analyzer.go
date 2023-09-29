@@ -124,7 +124,8 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 
 	createMacroDir()
 
-	file_map := map[string]string{}
+	// have to add to the current file map!
+	file_map := getFileMap()
 	used_names := []string{}
 
 	for idx, f := range pkg.Files {
