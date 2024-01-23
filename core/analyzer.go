@@ -335,6 +335,21 @@ func BuildOrRun(build bool, run bool, merge string) {
 				os.Rename(strings.Split(og_path, ".go")[0]+".original", og_path)
 				fmt.Println(strings.Split(og_path, ".go")[0]+".original","->",og_path)
 			}
+		} else {
+			// delete all of the original files
+			// rename the generated files that have been moved in place of the original ones
+			fmt.Println("Merging expanded macros into main source code")
+			for og_path, generated_path := range getFileMap() {
+
+				raw_path := og_path[:strings.LastIndex(og_path, "/")+1]
+				generated_name := strings.Split(generated_path, macro_dir)[1]
+
+				fmt.Println("renaming", raw_path+generated_name,"->",og_path)
+
+				os.Rename(raw_path+generated_name, og_path)
+				os.Remove(strings.Split(og_path, ".go")[0]+".original")
+			}
+
 		}
 	}()
 
@@ -533,7 +548,7 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 		for _, file := range ignorables {
 			os.Rename(file[:len(file)-3], file)
 		}
-		fmt.Println("Restored ignored files")
+		fmt.Println("Restored ignored files:", len(ignorables))
 	}()
 
         // can't use `package/main`, must be `package` :(
