@@ -215,7 +215,7 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 
 }
 
-func RunCommand(args []string) {
+func RunCommand(args []string) error {
 
     cmd :=  exec.Command(args[0], args[1:]...)
     stdout, _ := cmd.StdoutPipe()
@@ -231,11 +231,12 @@ func RunCommand(args []string) {
         m := scanner.Text()
         fmt.Println(m)
     }
+
     err := cmd.Wait()
     if err != nil {
 	fmt.Println("Failed to execute command", args)
-	panic(err)
     }
+    return err
 }
 
 func Clean() {
@@ -259,7 +260,9 @@ func getFileMap() map[string]string {
     return file_map
 }
 
-func BuildOrRun(build bool, run bool) {
+func BuildOrRun(build bool, run bool, merge string) {
+	var err error
+
 	// this needs to be severely refactored
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -280,6 +283,25 @@ func BuildOrRun(build bool, run bool) {
 
 	fmt.Println("Executable build/run for", entry_name)
 
+	merge_source := false
+
+	switch merge {
+		case "auto":
+			merge_source = true
+			break
+		default:
+			// this simply does not work because we need to pass in the subprocess stdin somehow :|
+			fmt.Printf("Merge expanded macros into source (y/n): ")
+			reader := bufio.NewReader(os.Stdin)
+			char, _, err := reader.ReadRune()
+			if err != nil {
+				fmt.Println("Could not read if should merge or not. Defaulting to NO!")
+			}
+			if char == 'y' || char == 'Y' {
+				merge_source = true
+			}
+	}
+
 	for og_path, generated_path := range getFileMap() {
 		fmt.Println("Swapping", og_path, "with generated macro file", generated_path)
 		os.Rename(og_path, strings.Split(og_path, ".go")[0]+".original")
@@ -295,32 +317,37 @@ func BuildOrRun(build bool, run bool) {
 		}
 	}
 
+	// undo the macro expansion to retain the original source code
 	defer func() {
-		for og_path, generated_path := range getFileMap() {
-			fmt.Println("Restoring original file", og_path)
-			// swap generated back first
-			raw_path := og_path[:strings.LastIndex(og_path, "/")+1]
-			generated_name := strings.Split(generated_path, macro_dir)[1]
-			err := os.Rename(raw_path + generated_name, generated_path)
-			if err != nil {
-				fmt.Println(err)
+		// if build/run errors or not merging, undo the macro expansion to retain the original source code
+		if err != nil || !merge_source {
+			fmt.Println("Restoring original source code (merge is set to false)")
+			for og_path, generated_path := range getFileMap() {
+				fmt.Println("Restoring original file", og_path)
+				// swap generated back first
+				raw_path := og_path[:strings.LastIndex(og_path, "/")+1]
+				generated_name := strings.Split(generated_path, macro_dir)[1]
+				err := os.Rename(raw_path + generated_name, generated_path)
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(raw_path+generated_name,"->",generated_path)
+				os.Rename(strings.Split(og_path, ".go")[0]+".original", og_path)
+				fmt.Println(strings.Split(og_path, ".go")[0]+".original","->",og_path)
 			}
-			fmt.Println(raw_path+generated_name,"->",generated_path)
-			os.Rename(strings.Split(og_path, ".go")[0]+".original", og_path)
-			fmt.Println(strings.Split(og_path, ".go")[0]+".original","->",og_path)
 		}
 	}()
 
 	if build {
-		RunCommand([]string{"go", "build", entry_name})
+		err = RunCommand([]string{"go", "build", entry_name})
 	}
 
 	if run {
 		if build {
 			fmt.Println("Running built executable:" + strings.Split(entry_name,".")[0])
-			RunCommand([]string{strings.Split(entry_name,".")[0]})
+			err = RunCommand([]string{strings.Split(entry_name,".")[0]})
 		} else {
-			RunCommand([]string{"go", "run", entry_name})
+			err = RunCommand([]string{"go", "run", entry_name})
 		}
 	}
 }
@@ -1020,6 +1047,7 @@ type Ctx struct {
 	KeepExpanded bool
 	Build bool
 	Run bool
+	Merge string
 }
 
 type MacroDescriptor struct {

@@ -19,6 +19,9 @@ import (
 	"golang.org/x/tools/go/packages"
 
         "github.com/dave/dst/decorator"
+
+
+	"gopkg.in/ini.v1"
 //        "github.com/dave/dst/decorator/resolver/simple"
 //        "github.com/dave/dst/decorator/resolver/goast"
 )
@@ -38,9 +41,12 @@ func asStrings(strs []string) []string {
 	return wrapped_strs
 }
 
+const default_config = "build.ini"
+
 func main() {
 
-        pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be parts of the module in the current directory i.e my_packge, my_package/something, or ./... to load all local packagesw")
+        config_path := flag.String("config", default_config, "Path to your build file i.e " + default_config)
+	pkg_name := flag.String("package", "", "The name of the package(s) to parse which should be parts of the module in the current directory i.e my_packge, my_package/something, or ./... to load all local packages")
 	maybe_ignore_files := flag.String("ignore", "", "Files to ignore from being parsed by go. Regex pattern matching support via r: prefix")
 	maybe_skip_files := flag.String("ignore_outputs", "", "Skip generating files that don't have their contents changed i.e macros that do not output code (this is a temporary fix). Regex pattern matching support via r: prefix")
 	should_build := flag.Bool("build", true, "Build go executable after expanding macros")
@@ -48,12 +54,44 @@ func main() {
 	keep_expanded := flag.Bool("keep_generated", false, "Keep the generated files")
 	clean := flag.Bool("clean", false, "Remove all generated files. This removes every file matching *_generated.go recursively")
 	build_only := flag.Bool("build_only", false, "Build the current source code using the original source code or with the already expanded macros from -keep_expanded")
-        flag.Parse()
+	should_merge := flag.String("merge", "ask", "Whether the expanded macros are automatically merged into the source code. Default will ask")
+
+	flag.Parse()
+
+        pre_clean := false
+
+	cfg, err := ini.Load(*config_path)
+	if err != nil {
+		fmt.Println("No build file found (default: build.ini) in current directory. Using command line arguments")
+	} else {
+		pkgs := cfg.Section("build").Key("packages").MustString("")
+		pkg_name = &pkgs
+
+		pre_clean = cfg.Section("config").Key("clean-first").MustBool(true)
+
+		keep_genned := cfg.Section("config").Key("keep-generated").MustBool(true)
+		keep_expanded = &keep_genned
+
+		merge := cfg.Section("config").Key("merge").MustString("ask")
+		should_merge = &merge
+
+		fmt.Println("Build values")
+		fmt.Println("Packages:", pkgs)
+		fmt.Println("Clean before compilation:", pre_clean)
+		fmt.Println("Keep generated files:", keep_genned)
+		fmt.Println("Merge expanded macros into source:", merge)
+	}
+
 
 	if *clean {
 		fmt.Println("Cleaning generated files")
 		os.RemoveAll(".generated/")
 		return
+	}
+
+	if pre_clean {
+		fmt.Println("Cleaning generated files before building")
+		os.RemoveAll(".generated/")
 	}
 
 	// ignore generate files and anything we generate!
@@ -98,7 +136,7 @@ func main() {
 			}
 		}()
 		BuildOnly()*/
-		BuildOrRun(true, false)
+		BuildOrRun(true, false, *should_merge)
 		return
 	}
 
@@ -165,7 +203,7 @@ func main() {
 				}
 			}
 			{{ if or .Build .Run }}
-				core.BuildOrRun({{.Build}}, {{.Run}})
+				core.BuildOrRun({{.Build}}, {{.Run}}, "{{.Merge}}")
 			{{- end }}
 		}
 	`
@@ -234,6 +272,7 @@ func main() {
 		KeepExpanded: *keep_expanded,
 		Run: *should_run,
 		Build: *should_build,
+		Merge: *should_merge,
 	})
 
         if err != nil {

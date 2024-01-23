@@ -6,6 +6,7 @@ require (
 	github.com/dave/dst v0.27.2
 	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
 	golang.org/x/tools v0.12.0
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (
