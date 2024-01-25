@@ -677,7 +677,8 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 					for _, d := range n.Decorations().End {
 						if strings.TrimSpace(d) == "/**generated**/" {
 							fmt.Println("Ignoring generated node")
-							n = nil
+							//n = nil
+							cr.Delete()
 							break
 						}
 					}
