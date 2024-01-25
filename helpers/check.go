@@ -57,6 +57,14 @@ func IsMethodImplemented(pkg_path string, type_name string, method_name string) 
 	return false
 }
 
+func CallExprExists(exprs []*dst.CallExpr, node *dst.CallExpr) (*dst.CallExpr, bool) {
+	for _, expr := range exprs {
+		// compare all call expr fields..?
+	}
+
+	return nil, false
+}
+
 /*func IsInterfaceImplemented(interface_definition *dst.GenDecl, our_node *dst.GenDecl) {
 	// we need to check function signatures
 

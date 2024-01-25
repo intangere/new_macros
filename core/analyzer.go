@@ -672,6 +672,13 @@ func Build(pkg_name string, ignore_files []string) []AnnotatedPackage {
 					return true
 				}
 
+				/// ignore generated nodes
+				if len(n.Decorations().End) > 0 {
+					if n.Decorations().End[0] == "/**generated**/" {
+						n = nil
+					}
+				}
+
 				// we need to build up function blocks
 
 				switch n.(type) {
