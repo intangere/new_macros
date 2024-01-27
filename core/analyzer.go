@@ -19,10 +19,12 @@ import (
 	"encoding/json"
 	"github.com/dave/dst/decorator/resolver/gotypes"
 	"github.com/dave/dst/decorator/resolver/simple"
+	"github.com/dave/dst/decorator/resolver/goast"
 	"os/exec"
 	"bufio"
 	"errors"
 	"strconv"
+	//"io/ioutil"
 )
 
 const loadMode = packages.NeedName |
@@ -147,6 +149,9 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 		//for n, z := range pkg.ImportMap[pkg.Files[idx]] {
 		//	fmt.Println(n, z)
 		//}
+
+		fmt.Println("imports", pkg.ImportMap[pkg.Files[idx]])
+		fmt.Println("inverted", invert_map(pkg.ImportMap[pkg.Files[idx]]))
 
 		r := decorator.NewRestorerWithImports(pkg.PkgPath, simple.New(invert_map(pkg.ImportMap[pkg.Files[idx]])))
 
@@ -893,7 +898,7 @@ type WithImport struct {
 	Path string
 }
 
-func Compile(code string, imports ...WithImport) (stmts []dst.Stmt) { //*dst.ExprStmt) {
+func Compile(code string, ref_node dst.Node, imports ...WithImport) (stmts []dst.Stmt) { //*dst.ExprStmt) {
 
 	new_code := "package main\n"
 
@@ -912,10 +917,48 @@ func Compile(code string, imports ...WithImport) (stmts []dst.Stmt) { //*dst.Exp
 	fmt.Println("Compiling...")
 	fmt.Println(code)
 
-	f, err := decorator.Parse(code)
+
+        /*dir, err := ioutil.TempDir(".", "prefix")
+        if err != nil {
+                panic(err)
+        }
+        defer os.RemoveAll(dir)
+
+        err = os.WriteFile(dir + "/go.mod", []byte("module root"), 0644)
+        if err != nil {
+                panic(err)
+        }
+
+
+        err = os.WriteFile(dir + "/main.go", []byte(new_code), 0644)
+        if err != nil {
+                panic(err)
+        }
+
+        // Use the Load convenience function that calls go/packages to load the package. All loaded
+        // ast files are decorated to dst.
+        pkgs, err := decorator.Load(&packages.Config{Dir: dir, Mode: packages.LoadSyntax}, "root")
+        if err != nil {
+                panic(err)
+        }*/
+
+	if ref_node != nil && len(imports) > 0 {
+		for _, i := range imports {
+			AddImport(ref_node, i.Alias, i.Path, i.Alias != "")
+		}
+	}
+
+	dec := decorator.NewDecoratorWithImports(nil, "main", goast.New())
+
+	f, err := dec.Parse(code) //decorator.Parse(code)
 	if err != nil {
 		panic(err)
 	}
+
+
+        //f := pkgs[0].Syntax[0]
+
+	//fmt.Println(f.Imports)
 
 	// index of our func decl is len(imports) basically lol
 	node := f.Decls[len(imports)].(*dst.FuncDecl)
