@@ -393,6 +393,20 @@ func AddImport(n dst.Node, name string, import_path string, has_alias bool) {
 				Alias: has_alias,
 				Path: import_path,
 			}
+			var alias_ident *dst.Ident
+			if has_alias {
+				alias_ident = &dst.Ident{
+					Name: name,
+				}
+			}
+
+			f.Imports = append(f.Imports, &dst.ImportSpec{
+				Name: alias_ident,
+				Path: &dst.BasicLit{
+					Kind: token.STRING,
+					Value: import_path,
+				},
+			})
 		}
 	}
 }
