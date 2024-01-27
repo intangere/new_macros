@@ -385,6 +385,18 @@ type AnnotatedPackage struct {
 	NodeToFiles map[dst.Node]*dst.File
 }
 
+func AddImport(n dst.Node, name string, import_path string, has_alias bool) {
+	for _, pkg := range imported_packages {
+		if f, ok := pkg.NodeToFiles[n]; ok {
+			pkg.ImportMap[f][import_path] = ImportDescriptor {
+				Name: name,
+				Alias: has_alias,
+				Path: import_path,
+			}
+		}
+	}
+}
+
 func IgnoreFiles(ignore_files []string) []string {
         paths := []string{}
         err := filepath.Walk(".",

@@ -19,7 +19,7 @@ func MatchAny(annotations []core.Annotation, tags []string) []string {
 	return matched
 }
 
-func GetValues(annotations []core.Annotation, tag string) []string {
+func GetTagValues(annotations []core.Annotation, tag string) []string {
 	for _, annotation_set := range annotations {
 		for _, annotation_sub_set := range annotation_set.Params {
 			if annotation_sub_set[0] == tag {
@@ -28,4 +28,21 @@ func GetValues(annotations []core.Annotation, tag string) []string {
 		}
 	}
 	return []string{}
+}
+
+func GetTagValue(annotations []core.Annotation, tag string) (string, bool) {
+	// return the first value for a single tag i.e :path="/some/path"->"/some/path"
+	for _, annotation_set := range annotations {
+		for _, annotation_sub_set := range annotation_set.Params {
+			if annotation_sub_set[0] == tag {
+				if len(annotation_sub_set) > 1 {
+					return annotation_sub_set[1], true
+				} else {
+					// tag exists but has no value
+					return "", true
+				}
+			}
+		}
+	}
+	return "", false
 }
