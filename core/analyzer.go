@@ -385,6 +385,8 @@ type AnnotatedPackage struct {
 	NodeToFiles map[dst.Node]*dst.File
 }
 
+/*
+This cannot work since imports are identified based on nodes usage of import identifiers
 func AddImport(n dst.Node, name string, import_path string, has_alias bool) {
 	for _, pkg := range imported_packages {
 		if f, ok := pkg.NodeToFiles[n]; ok {
@@ -409,7 +411,7 @@ func AddImport(n dst.Node, name string, import_path string, has_alias bool) {
 			})
 		}
 	}
-}
+}*/
 
 func IgnoreFiles(ignore_files []string) []string {
         paths := []string{}
@@ -886,9 +888,26 @@ func FindAnnotatedNode(annotation string) (dst.Node, bool) {
 	return nil, false
 }
 
-func Compile(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
+type WithImport struct {
+	Alias string
+	Path string
+}
 
-	code = "package main; func test() error { " + code + "}"
+func Compile(code string, imports ...WithImport) (stmts []dst.Stmt) { //*dst.ExprStmt) {
+
+	new_code := "package main\n"
+
+	for _, i := range imports {
+		if strings.TrimSpace(i.Alias) != "" {
+			new_code += "import \"" + i.Alias + "\" " + i.Path + "\"\n"
+		} else {
+			new_code += "import \"" + i.Path + "\"\n"
+		}
+	}
+
+	new_code += "\n func test() error { " + code + "}"
+
+	code = new_code
 
 	fmt.Println("Compiling...")
 	fmt.Println(code)
@@ -897,7 +916,9 @@ func Compile(code string) (stmts []dst.Stmt) { //*dst.ExprStmt) {
 	if err != nil {
 		panic(err)
 	}
-	node := f.Decls[0].(*dst.FuncDecl)
+
+	// index of our func decl is len(imports) basically lol
+	node := f.Decls[len(imports)].(*dst.FuncDecl)
 	for _, n := range node.Body.List {
 		new_node := dst.Clone(n)
 		stmts = append(stmts, new_node.(dst.Stmt)) //.(*dst.ExprStmt))
