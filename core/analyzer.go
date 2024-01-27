@@ -385,8 +385,8 @@ type AnnotatedPackage struct {
 	NodeToFiles map[dst.Node]*dst.File
 }
 
-/*
-This cannot work since imports are identified based on nodes usage of import identifiers
+
+//This cannot work since imports are identified based on nodes usage of import identifiers
 func AddImport(n dst.Node, name string, import_path string, has_alias bool) {
 	for _, pkg := range imported_packages {
 		if f, ok := pkg.NodeToFiles[n]; ok {
@@ -411,7 +411,7 @@ func AddImport(n dst.Node, name string, import_path string, has_alias bool) {
 			})
 		}
 	}
-}*/
+}
 
 func IgnoreFiles(ignore_files []string) []string {
         paths := []string{}
@@ -899,7 +899,7 @@ func Compile(code string, imports ...WithImport) (stmts []dst.Stmt) { //*dst.Exp
 
 	for _, i := range imports {
 		if strings.TrimSpace(i.Alias) != "" {
-			new_code += "import \"" + i.Alias + "\" " + i.Path + "\"\n"
+			new_code += "import " + i.Alias + " \"" + i.Path + "\"\n"
 		} else {
 			new_code += "import \"" + i.Path + "\"\n"
 		}
