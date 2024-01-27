@@ -150,8 +150,8 @@ func Run(dec *decorator.Decorator, pkg AnnotatedPackage, skip_paths []string) {
 		//	fmt.Println(n, z)
 		//}
 
-		fmt.Println("imports", pkg.ImportMap[pkg.Files[idx]])
-		fmt.Println("inverted", invert_map(pkg.ImportMap[pkg.Files[idx]]))
+		//fmt.Println("imports", pkg.ImportMap[pkg.Files[idx]])
+		//fmt.Println("inverted", invert_map(pkg.ImportMap[pkg.Files[idx]]))
 
 		r := decorator.NewRestorerWithImports(pkg.PkgPath, simple.New(invert_map(pkg.ImportMap[pkg.Files[idx]])))
 
@@ -487,7 +487,7 @@ func buildScope(f *dst.FuncDecl, dec *decorator.Decorator, info *types.Info) Sco
 		switch n.(type) {
 		case *dst.AssignStmt:
 			stmt := n.(*dst.AssignStmt).Lhs[0]
-			fmt.Println("stmt", stmt)
+			//fmt.Println("stmt", stmt)
 			a, ok := dec.Ast.Nodes[stmt].(*ast.Ident)
 			if !ok{
 				break
@@ -496,13 +496,13 @@ func buildScope(f *dst.FuncDecl, dec *decorator.Decorator, info *types.Info) Sco
 				break
 			}
 			if b, ok := info.Types[a]; ok {
-				fmt.Println("Assign", b)
+				//fmt.Println("Assign", b)
 				scope.Variables[a.String()] = Variable{
 					Name: a.String(),
 					BasicType: b.Type.String(),
 				}
 			} else if b, ok := info.Defs[a]; ok {
-				fmt.Println("Assign 1", b)
+				//fmt.Println("Assign 1", b)
 				scope.Variables[a.String()] = Variable{
 					Name: a.String(),
 					BasicType: b.Type().String(),
@@ -520,7 +520,7 @@ func buildTypedFuncParams(f *dst.FuncDecl, dec *decorator.Decorator, info *types
 	for _, param := range f.Type.Params.List {
 		a, ok := dec.Ast.Nodes[param].(*ast.Field)
 		if ok{
-			fmt.Println("BIG PARAMA!!!", info.Types[a.Type].Type.String())
+			//fmt.Println("BIG PARAMA!!!", info.Types[a.Type].Type.String())
 			vars = append(vars, Variable{
 				Name: a.Names[0].String(),
 				BasicType: info.Types[a.Type].Type.String(),
@@ -538,7 +538,7 @@ func buildTypedFuncReturns(f *dst.FuncDecl, dec *decorator.Decorator, info *type
 		for _, param := range f.Type.Results.List {
 			a, ok := dec.Ast.Nodes[param].(*ast.Field)
 			if ok{
-				fmt.Println("BIG PARAMA!!!", info.Types[a.Type].Type.String())
+				//fmt.Println("BIG PARAMA!!!", info.Types[a.Type].Type.String())
 				name := ""
 				if len(a.Names) > 0 {
 					name = a.Names[0].String()
@@ -1077,9 +1077,9 @@ func WithNode(node_info []string) dst.Node {
 var IsLastMap map[string]int = map[string]int{}
 
 func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars []dst.Node, annotations map[dst.Node][]Annotation, type_info *types.Info) {
-	fmt.Println("Building macros")
-	fmt.Println(funcs, consts, structs, vars)
-	fmt.Println("annos", annotations)
+	fmt.Println("Expanding macros..")
+	//fmt.Println(funcs, consts, structs, vars)
+	//fmt.Println("annos", annotations)
 
 	for k, v := range annotations {
 		ANNOTATIONS[k] = v
@@ -1138,6 +1138,8 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars [
 							}
 						}*/
 					}
+
+					fmt.Println("[Expanding", annotation_name ,"]: for ", Func_descriptors[start].PkgName+"."+Func_descriptors[start].FuncName)
 					n := Node {
 						Annotations: ANNOTATIONS[start],
 						Types: type_info,
@@ -1153,11 +1155,12 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars [
 					//	outputs := macro(nodes, type_info)
 					//	new_func_blocks[start] = outputs
 					//}
-					fmt.Println("Built macro")
+					fmt.Println("[Expanded", annotation_name,"]")
 				}
 			}
 		}
 	}
+	fmt.Println("All macros expanded")
 }
 
 type Node struct {
