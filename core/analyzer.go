@@ -905,17 +905,17 @@ func CompileFunctions(code string) (stmts []dst.Decl) { //*dst.ExprStmt) {
 	return f.Decls
 }
 
-var MACROS = map[string]func(dst.Node, *types.Info, ...any){}
+var MACROS = map[string]func(Node){} //dst.Node, *types.Info, ...any){}
 var MACRO_ANNOTATIONS = map[string][]Annotation{}
 
-func Inject(macro_name string, annotations_json string, f func(dst.Node, *types.Info, ...any)) {
+func Inject(macro_name string, annotations_json string, f func(Node)) { //dst.Node, *types.Info, ...any)) {
 	annos := []Annotation{}
 	_ = json.Unmarshal([]byte(annotations_json), &annos)
 	MACROS[macro_name] = f
 	MACRO_ANNOTATIONS[macro_name] = annos
 }
 
-func GetMacro(macro_name string) func(dst.Node, *types.Info, ...any) {
+func GetMacro(macro_name string) func(Node) { //dst.Node, *types.Info, ...any) {
 	if f, ok := MACROS[macro_name]; ok {
 		return f
 	}
@@ -1060,7 +1060,13 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars [
 							}
 						}*/
 					}
-					macro(start, type_info, others...)
+					n := Node {
+						Annotations: ANNOTATIONS[start],
+						Types: type_info,
+						Extra: others,
+						Node: start,
+					}
+					macro(n) //start, type_info, others...)
 					// to chain macros we use output blocks
 					//if new_nodes, ok := new_func_blocks[start]; ok {
 					//	outputs := macro(new_nodes, type_info)
@@ -1076,6 +1082,12 @@ func BuildMacros(funcs []dst.Node, consts []dst.Node, structs []dst.Node, vars [
 	}
 }
 
+type Node struct {
+	Node dst.Node
+	Annotations []Annotation
+	Types *types.Info
+	Extra []any
+}
 
 type Ctx struct {
 	ExtraImports []string
